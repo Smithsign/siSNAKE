@@ -1,118 +1,115 @@
-let canvas = document.getElementById("gameCanvas");
-let ctx = canvas.getContext("2d");
+// game.js
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
 
-let gridSize = 20; // 20x20 grid
-let box = canvas.width / gridSize;
-let snake = [{ x: 9, y: 9 }];
-let direction = "";
-let food = generateFood();
+const gridSize = 20;
+const cellSize = canvas.width / gridSize;
+
+let snake = [{ x: 10, y: 10 }];
+let direction = null;
+let food = getRandomFood();
 let score = 0;
-let gameStarted = false;
+let intervalId = null;
+let countdownEl = document.getElementById("countdown");
 
-// Load assets
 const headImg = new Image();
 headImg.src = "xin.jpg";
-
 const foodImg = new Image();
 foodImg.src = "orange.jpg";
 
-// Countdown function
-function startCountdown(callback) {
-  let count = 3;
-  const countdownEl = document.getElementById("countdown");
-  countdownEl.style.display = "block";
-  countdownEl.innerText = count;
-
-  const interval = setInterval(() => {
-    count--;
-    if (count === 0) {
-      clearInterval(interval);
-      countdownEl.style.display = "none";
-      callback();
-    } else {
-      countdownEl.innerText = count;
-    }
-  }, 1000);
+function getRandomFood() {
+  return { x: Math.floor(Math.random() * gridSize), y: Math.floor(Math.random() * gridSize) };
 }
 
-// Game logic
 function draw() {
-  if (!gameStarted) return;
-
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Draw snake
-  for (let i = 0; i < snake.length; i++) {
-    const segment = snake[i];
+  // draw snake
+  snake.forEach((seg, i) => {
     if (i === 0) {
-      ctx.drawImage(headImg, segment.x * box, segment.y * box, box, box);
+      ctx.drawImage(headImg, seg.x * cellSize, seg.y * cellSize, cellSize, cellSize);
     } else {
-      ctx.fillStyle = "#FFA500";
-      ctx.fillRect(segment.x * box, segment.y * box, box, box);
+      ctx.fillStyle = "#000";
+      ctx.fillRect(seg.x * cellSize, seg.y * cellSize, cellSize, cellSize);
     }
+  });
+
+  // draw food
+  ctx.drawImage(foodImg, food.x * cellSize, food.y * cellSize, cellSize, cellSize);
+}
+
+function step() {
+  const head = { ...snake[0] };
+
+  switch (direction) {
+    case "ArrowUp": head.y--; break;
+    case "ArrowDown": head.y++; break;
+    case "ArrowLeft": head.x--; break;
+    case "ArrowRight": head.x++; break;
   }
 
-  // Draw food
-  ctx.drawImage(foodImg, food.x * box, food.y * box, box, box);
-
-  // Move
-  let head = { ...snake[0] };
-  if (direction === "LEFT") head.x--;
-  if (direction === "RIGHT") head.x++;
-  if (direction === "UP") head.y--;
-  if (direction === "DOWN") head.y++;
-
-  // Check game over
-  if (
-    head.x < 0 ||
-    head.x >= gridSize ||
-    head.y < 0 ||
-    head.y >= gridSize ||
-    collision(head)
-  ) {
-    gameOver();
+  if (head.x < 0 || head.x >= gridSize || head.y < 0 || head.y >= gridSize ||
+      snake.some((s, i) => i > 0 && s.x === head.x && s.y === head.y)) {
+    endGame();
     return;
   }
 
   snake.unshift(head);
-
   if (head.x === food.x && head.y === food.y) {
     score++;
-    food = generateFood();
+    food = getRandomFood();
   } else {
     snake.pop();
   }
+
+  draw();
 }
 
-function collision(head) {
-  return snake.some((segment, index) => index !== 0 && segment.x === head.x && segment.y === head.y);
+function startGame() {
+  countdownEl.style.display = "block";
+  let count = 3;
+  countdownEl.textContent = count;
+  const cd = setInterval(() => {
+    count--;
+    if (count === 0) {
+      clearInterval(cd);
+      countdownEl.style.display = "none";
+      document.getElementById("startGameBtn").style.display = "none";
+      document.addEventListener("keydown", keyHandler);
+      intervalId = setInterval(step, 200);
+    } else {
+      countdownEl.textContent = count;
+    }
+  }, 1000);
 }
 
-function generateFood() {
-  return {
-    x: Math.floor(Math.random() * gridSize),
-    y: Math.floor(Math.random() * gridSize),
-  };
-}
+function endGame() {
+  clearInterval(intervalId);
+  document.getElementById("finalScore").textContent = score;
+  document.getElementById("gameOverPopup").classList.remove("hidden");
 
-function gameOver() {
-  clearInterval(game);
-  document.getElementById("gameOverScreen").style.display = "flex";
-  document.getElementById("finalScore").innerText = `Score: ${score}`;
-}
-
-document.addEventListener("keydown", (e) => {
-  if (e.key === "ArrowLeft" && direction !== "RIGHT") direction = "LEFT";
-  if (e.key === "ArrowRight" && direction !== "LEFT") direction = "RIGHT";
-  if (e.key === "ArrowUp" && direction !== "DOWN") direction = "UP";
-  if (e.key === "ArrowDown" && direction !== "UP") direction = "DOWN";
-});
-
-document.getElementById("startGame").addEventListener("click", () => {
-  document.getElementById("landing").style.display = "none";
-  document.getElementById("canvasWrapper").style.display = "block";
-  startCountdown(() => {
-    gameStarted = true;
-    game = setInterval(draw, 200);
+  fetch("submit_score.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      username: localStorage.getItem("playerName"),
+      image: localStorage.getItem("playerImage"),
+      score
+    })
   });
+}
+
+function keyHandler(e) {
+  const key = e.key;
+  if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(key)) {
+    direction = key;
+  }
+}
+
+document.getElementById("startGameBtn").addEventListener("click", startGame);
+document.getElementById("tryAgainBtn").addEventListener("click", () => window.location.reload());
+document.getElementById("shareBtn").addEventListener("click", () => {
+  const text = `I scored ${score} in Snake.SIGN!`;
+  const url = encodeURIComponent(location.href);
+  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${url}`, "_blank");
 });
