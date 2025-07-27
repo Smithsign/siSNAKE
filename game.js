@@ -1,152 +1,118 @@
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
+let canvas = document.getElementById("gameCanvas");
+let ctx = canvas.getContext("2d");
 
-// Grid config
-const gridSize = 10;
-const box = Math.floor(Math.min(window.innerWidth, window.innerHeight) * 0.9 / gridSize);
-canvas.width = box * gridSize;
-canvas.height = box * gridSize;
-
-let snake = [];
-let direction = "RIGHT";
+let gridSize = 20; // 20x20 grid
+let box = canvas.width / gridSize;
+let snake = [{ x: 9, y: 9 }];
+let direction = "";
+let food = generateFood();
 let score = 0;
-let food;
-let game;
-let speed = 150;
+let gameStarted = false;
 
-// Load images
-const foodImg = new Image();
-foodImg.src = "orange.png";
-
+// Load assets
 const headImg = new Image();
 headImg.src = "xin.jpg";
 
-function initGame() {
-  snake = [{ x: 5, y: 5 }];
-  direction = "RIGHT";
-  score = 0;
-  speed = 150;
+const foodImg = new Image();
+foodImg.src = "orange.jpg";
 
-  food = {
-    x: Math.floor(Math.random() * gridSize),
-    y: Math.floor(Math.random() * gridSize)
-  };
+// Countdown function
+function startCountdown(callback) {
+  let count = 3;
+  const countdownEl = document.getElementById("countdown");
+  countdownEl.style.display = "block";
+  countdownEl.innerText = count;
 
-  document.getElementById("gameOverPopup").classList.add("hidden");
-  document.getElementById("score").textContent = score;
-  canvas.style.display = "block";
-
-  if (game) clearInterval(game);
-  game = setInterval(draw, speed);
+  const interval = setInterval(() => {
+    count--;
+    if (count === 0) {
+      clearInterval(interval);
+      countdownEl.style.display = "none";
+      callback();
+    } else {
+      countdownEl.innerText = count;
+    }
+  }, 1000);
 }
 
-function drawGrid() {
-  ctx.strokeStyle = "#FFB347";
-  for (let i = 0; i <= gridSize; i++) {
-    ctx.beginPath();
-    ctx.moveTo(i * box, 0);
-    ctx.lineTo(i * box, canvas.height);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(0, i * box);
-    ctx.lineTo(canvas.width, i * box);
-    ctx.stroke();
-  }
-}
-
+// Game logic
 function draw() {
+  if (!gameStarted) return;
+
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawGrid();
 
   // Draw snake
-  snake.forEach((segment, index) => {
-    if (index === 0) {
+  for (let i = 0; i < snake.length; i++) {
+    const segment = snake[i];
+    if (i === 0) {
       ctx.drawImage(headImg, segment.x * box, segment.y * box, box, box);
     } else {
-      ctx.fillStyle = "#000";
-      ctx.beginPath();
-      ctx.arc(segment.x * box + box / 2, segment.y * box + box / 2, box / 2, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.fillStyle = "#FFA500";
+      ctx.fillRect(segment.x * box, segment.y * box, box, box);
     }
-  });
+  }
 
   // Draw food
   ctx.drawImage(foodImg, food.x * box, food.y * box, box, box);
 
-  // Move snake
-  const headX = snake[0].x;
-  const headY = snake[0].y;
-  let newHead = { x: headX, y: headY };
+  // Move
+  let head = { ...snake[0] };
+  if (direction === "LEFT") head.x--;
+  if (direction === "RIGHT") head.x++;
+  if (direction === "UP") head.y--;
+  if (direction === "DOWN") head.y++;
 
-  if (direction === "UP") newHead.y--;
-  if (direction === "DOWN") newHead.y++;
-  if (direction === "LEFT") newHead.x--;
-  if (direction === "RIGHT") newHead.x++;
-
-  // Game over
+  // Check game over
   if (
-    newHead.x < 0 ||
-    newHead.x >= gridSize ||
-    newHead.y < 0 ||
-    newHead.y >= gridSize ||
-    snake.some((s, i) => i !== 0 && s.x === newHead.x && s.y === newHead.y)
+    head.x < 0 ||
+    head.x >= gridSize ||
+    head.y < 0 ||
+    head.y >= gridSize ||
+    collision(head)
   ) {
-    clearInterval(game);
-    showGameOver(score);
+    gameOver();
     return;
   }
 
-  if (newHead.x === food.x && newHead.y === food.y) {
-    score++;
-    document.getElementById("score").textContent = score;
-    food = {
-      x: Math.floor(Math.random() * gridSize),
-      y: Math.floor(Math.random() * gridSize)
-    };
+  snake.unshift(head);
 
-    if (speed > 60) {
-      clearInterval(game);
-      speed -= 5;
-      game = setInterval(draw, speed);
-    }
+  if (head.x === food.x && head.y === food.y) {
+    score++;
+    food = generateFood();
   } else {
     snake.pop();
   }
-
-  snake.unshift(newHead);
 }
 
-function showGameOver(score) {
-  canvas.style.display = "none";
-  document.getElementById("finalScore").textContent = score;
-  document.getElementById("gameOverPopup").classList.remove("hidden");
+function collision(head) {
+  return snake.some((segment, index) => index !== 0 && segment.x === head.x && segment.y === head.y);
 }
 
-// Controls
+function generateFood() {
+  return {
+    x: Math.floor(Math.random() * gridSize),
+    y: Math.floor(Math.random() * gridSize),
+  };
+}
+
+function gameOver() {
+  clearInterval(game);
+  document.getElementById("gameOverScreen").style.display = "flex";
+  document.getElementById("finalScore").innerText = `Score: ${score}`;
+}
+
 document.addEventListener("keydown", (e) => {
-  const key = e.key.toLowerCase();
-  if ((key === "arrowup" || key === "w") && direction !== "DOWN") direction = "UP";
-  else if ((key === "arrowdown" || key === "s") && direction !== "UP") direction = "DOWN";
-  else if ((key === "arrowleft" || key === "a") && direction !== "RIGHT") direction = "LEFT";
-  else if ((key === "arrowright" || key === "d") && direction !== "LEFT") direction = "RIGHT";
+  if (e.key === "ArrowLeft" && direction !== "RIGHT") direction = "LEFT";
+  if (e.key === "ArrowRight" && direction !== "LEFT") direction = "RIGHT";
+  if (e.key === "ArrowUp" && direction !== "DOWN") direction = "UP";
+  if (e.key === "ArrowDown" && direction !== "UP") direction = "DOWN";
 });
 
-// Buttons
-document.getElementById("startGameBtn").addEventListener("click", () => {
-  document.getElementById("startGameBtn").style.display = "none";
-  initGame();
-});
-
-document.getElementById("tryAgainBtn").addEventListener("click", () => {
-  document.getElementById("startGameBtn").style.display = "block";
-  document.getElementById("gameOverPopup").classList.add("hidden");
-  initGame();
-});
-
-document.getElementById("shareBtn").addEventListener("click", () => {
-  const text = `I scored ${score} on SIGN Snake Game! 🍊🎮 Try it now!`;
-  const url = encodeURIComponent(window.location.href);
-  const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${url}`;
-  window.open(shareUrl, "_blank");
+document.getElementById("startGame").addEventListener("click", () => {
+  document.getElementById("landing").style.display = "none";
+  document.getElementById("canvasWrapper").style.display = "block";
+  startCountdown(() => {
+    gameStarted = true;
+    game = setInterval(draw, 200);
+  });
 });
