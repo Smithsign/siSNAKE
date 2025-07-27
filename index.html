@@ -2,283 +2,42 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Orange Snake Game</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Poppins', sans-serif;
-    }
-    body {
-      background: #fff7ed;
-      color: #333;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      overflow: hidden;
-    }
-    .container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      max-width: 600px;
-      width: 90%;
-      padding: 20px;
-    }
-    #startScreen, #gameOverScreen, #leaderboardScreen {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      gap: 20px;
-    }
-    canvas {
-      border: 6px solid orange;
-      background-color: #fff;
-      margin-top: 20px;
-      border-radius: 16px;
-    }
-    button {
-      padding: 10px 20px;
-      background: orange;
-      color: white;
-      font-weight: bold;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
-    button:hover {
-      background: #ff9900;
-    }
-    input[type="text"] {
-      padding: 10px;
-      border-radius: 8px;
-      border: 2px solid orange;
-      width: 100%;
-    }
-    input[type="file"] {
-      margin-top: 10px;
-    }
-    #leaderboardList img {
-      width: 30px;
-      height: 30px;
-      object-fit: cover;
-      border-radius: 50%;
-      margin-right: 10px;
-    }
-    #leaderboardList li {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 5px;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Snake.SIGN</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="container">
-    <div id="startScreen">
-      <h2>Welcome to Orange Snake Game</h2>
-      <p>Enter your name and upload your photo</p>
-      <input type="text" id="playerName" placeholder="Your name (must include .SIGN)" />
-      <input type="file" id="playerPhoto" accept="image/*" />
-      <button id="startGameBtn">Start Game</button>
-    </div>
-
-    <canvas id="gameCanvas" width="400" height="400"></canvas>
-
-    <div id="gameOverScreen">
-      <h2>Game Over</h2>
-      <p id="finalScoreText"></p>
-      <img id="playerImage" width="80" height="80" style="border-radius: 50%;" />
-      <button id="tryAgainBtn">Try Again</button>
-      <a id="shareXBtn" target="_blank">Share on X</a>
-    </div>
-
-    <div id="leaderboardScreen">
-      <h3>Leaderboard (Top 100)</h3>
-      <ul id="leaderboardList"></ul>
+  <div id="landingPage">
+    <h1>Snake.SIGN</h1>
+    <div class="input-box">
+      <input type="text" id="playerName" placeholder="Enter your name (must end with .SIGN)" />
+      <input type="file" id="playerImage" accept="image/*" />
+      <button id="startBtn" disabled>START THE GAME</button>
     </div>
   </div>
 
-  <script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const box = 20;
-    let snake = [];
-    let direction = null;
-    let food;
-    let score = 0;
-    let speed = 200;
-    let gameLoop;
-    let headImage = new Image();
-    headImage.src = 'xin.jpg';
+  <div id="gamePage" class="hidden">
+    <div class="top-bar">
+      <button id="guideBtn">Guide</button>
+      <button id="gameBtn">Game</button>
+      <button id="leaderboardBtn">Leaderboard</button>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+  </div>
 
-    const startScreen = document.getElementById('startScreen');
-    const gameOverScreen = document.getElementById('gameOverScreen');
-    const leaderboardScreen = document.getElementById('leaderboardScreen');
-    const startGameBtn = document.getElementById('startGameBtn');
-    const tryAgainBtn = document.getElementById('tryAgainBtn');
-    const shareXBtn = document.getElementById('shareXBtn');
+  <div id="gameOverPopup" class="hidden">
+    <h2>Game Over</h2>
+    <p>Your Score: <span id="finalScore"></span></p>
+    <button id="retryBtn">Try Again</button>
+    <a id="shareX" target="_blank">Share on X</a>
+  </div>
 
-    const playerNameInput = document.getElementById('playerName');
-    const playerPhotoInput = document.getElementById('playerPhoto');
-    const finalScoreText = document.getElementById('finalScoreText');
-    const playerImage = document.getElementById('playerImage');
+  <div id="leaderboard" class="hidden">
+    <h3>Leaderboard - Top 100</h3>
+    <ul id="leaderboardList"></ul>
+    <button onclick="document.getElementById('leaderboard').classList.add('hidden')">Close</button>
+  </div>
 
-    let playerPhotoURL = '';
-    let playerName = '';
-
-    function initGame() {
-      snake = [{ x: 9 * box, y: 10 * box }];
-      direction = null;
-      score = 0;
-      speed = 200;
-      generateFood();
-      draw();
-      clearInterval(gameLoop);
-      gameLoop = setInterval(move, speed);
-    }
-
-    function generateFood() {
-      food = {
-        x: Math.floor(Math.random() * 19 + 1) * box,
-        y: Math.floor(Math.random() * 19 + 1) * box
-      };
-    }
-
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = 'orange';
-      ctx.fillRect(food.x, food.y, box, box);
-      for (let i = 0; i < snake.length; i++) {
-        if (i === 0) {
-          ctx.drawImage(headImage, snake[i].x, snake[i].y, box, box);
-        } else {
-          ctx.fillStyle = 'black';
-          ctx.beginPath();
-          ctx.arc(snake[i].x + box / 2, snake[i].y + box / 2, box / 2, 0, 2 * Math.PI);
-          ctx.fill();
-        }
-      }
-    }
-
-    function move() {
-      let headX = snake[0].x;
-      let headY = snake[0].y;
-
-      if (direction === 'LEFT') headX -= box;
-      if (direction === 'RIGHT') headX += box;
-      if (direction === 'UP') headY -= box;
-      if (direction === 'DOWN') headY += box;
-
-      if (headX === food.x && headY === food.y) {
-        score++;
-        generateFood();
-        speed = Math.max(60, speed - 10);
-        clearInterval(gameLoop);
-        gameLoop = setInterval(move, speed);
-      } else {
-        snake.pop();
-      }
-
-      let newHead = { x: headX, y: headY };
-
-      if (
-        headX < 0 || headY < 0 ||
-        headX >= canvas.width ||
-        headY >= canvas.height ||
-        collision(newHead, snake)
-      ) {
-        clearInterval(gameLoop);
-        showGameOver();
-        return;
-      }
-
-      snake.unshift(newHead);
-      draw();
-    }
-
-    function collision(head, array) {
-      for (let i = 0; i < array.length; i++) {
-        if (head.x === array[i].x && head.y === array[i].y) return true;
-      }
-      return false;
-    }
-
-    function showGameOver() {
-      canvas.style.display = 'none';
-      gameOverScreen.style.display = 'flex';
-      finalScoreText.innerText = `Score: ${score} 🍊`;
-      playerImage.src = playerPhotoURL;
-      shareXBtn.href = `https://twitter.com/intent/tweet?text=I scored ${score} in Orange Snake Game! 🐍🍊`;
-      saveToLeaderboard();
-    }
-
-    function saveToLeaderboard() {
-      let leaderboard = JSON.parse(localStorage.getItem('snakeLeaderboard')) || [];
-      leaderboard.push({ name: playerName, score, photo: playerPhotoURL });
-      leaderboard.sort((a, b) => b.score - a.score);
-      leaderboard = leaderboard.slice(0, 100);
-      localStorage.setItem('snakeLeaderboard', JSON.stringify(leaderboard));
-      updateLeaderboard();
-    }
-
-    function updateLeaderboard() {
-      const list = document.getElementById('leaderboardList');
-      list.innerHTML = '';
-      const leaderboard = JSON.parse(localStorage.getItem('snakeLeaderboard')) || [];
-      leaderboard.forEach((player, index) => {
-        const li = document.createElement('li');
-        li.innerHTML = `<strong>${index + 1}.</strong> <img src="${player.photo}" /> ${player.name} - ${player.score}`;
-        list.appendChild(li);
-      });
-    }
-
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowLeft' || e.key === 'a') direction = 'LEFT';
-      else if (e.key === 'ArrowUp' || e.key === 'w') direction = 'UP';
-      else if (e.key === 'ArrowRight' || e.key === 'd') direction = 'RIGHT';
-      else if (e.key === 'ArrowDown' || e.key === 's') direction = 'DOWN';
-    });
-
-    startGameBtn.onclick = () => {
-      if (!playerNameInput.value.includes('.SIGN')) {
-        alert('Name must include ".SIGN"');
-        return;
-      }
-      playerName = playerNameInput.value;
-      const file = playerPhotoInput.files[0];
-      if (!file) {
-        alert('Please upload a picture');
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        playerPhotoURL = e.target.result;
-        startScreen.style.display = 'none';
-        canvas.style.display = 'block';
-        leaderboardScreen.style.display = 'none';
-        initGame();
-      };
-      reader.readAsDataURL(file);
-    };
-
-    tryAgainBtn.onclick = () => {
-      gameOverScreen.style.display = 'none';
-      canvas.style.display = 'block';
-      initGame();
-    };
-
-    window.onload = () => {
-      startScreen.style.display = 'flex';
-      updateLeaderboard();
-    };
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
