@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Leaderboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Top 100 Snake Hunters 🍊</h1>
+  <div id="leaderboard"></div>
+
+  <script>
+    fetch("leaderboard.php")
+      .then(res => res.json())
+      .then(data => {
+        const lb = document.getElementById("leaderboard");
+        data.forEach((user, index) => {
+          lb.innerHTML += `
+            <div class="user-row">
+              <strong>#${index + 1}</strong> 
+              <img src="${user.image}" width="40" style="border-radius:50%;"> 
+              ${user.username} - <span>${user.score} 🍊</span>
+            </div>
+          `;
+        });
+      });
+  </script>
+</body>
+</html>
