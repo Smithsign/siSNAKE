@@ -2,304 +2,302 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Orange Snake Game</title>
   <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to bottom right, #fff3e0, #ffe0b2);
-      color: #333;
-      text-align: center;
+    * {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-
-    h1 {
-      margin-top: 20px;
-      color: #ff8c00;
+    body, html {
+      width: 100%;
+      height: 100%;
+      background: #fff7e6;
+      overflow: hidden;
     }
+    .hidden { display: none; }
 
-    #nav, #formContainer {
+    .landing, .form-page, .game-container, .leaderboard, .guide-page {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       display: flex;
+      flex-direction: column;
       justify-content: center;
-      gap: 20px;
-      margin: 20px;
-      flex-wrap: wrap;
+      align-items: center;
+      background: #fff7e6;
+      padding: 20px;
     }
 
-    #nav button, #formContainer button {
-      background-color: #ffa726;
+    h1, h2 {
+      color: #ff9900;
+      margin-bottom: 20px;
+    }
+
+    .form-box {
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      text-align: center;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .form-box input[type="text"], .form-box input[type="file"] {
+      padding: 12px;
+      margin-bottom: 15px;
+      width: 100%;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+    }
+
+    .form-box button {
+      padding: 10px 20px;
+      background: #ff9900;
       color: white;
       border: none;
-      padding: 10px 20px;
-      font-size: 16px;
-      border-radius: 8px;
+      border-radius: 10px;
+      font-weight: bold;
       cursor: pointer;
     }
 
-    #formContainer input {
-      padding: 8px;
-      margin: 5px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-
-    #game-container, #guide, #leaderboard, #landing, #popup {
-      display: none;
-      margin: 0 auto;
-      width: 100%;
-      max-width: 420px;
-    }
-
-    canvas {
-      background-color: #fff3e0;
+    #canvas {
+      background: repeating-linear-gradient(45deg, #fff2cc 0, #fff2cc 20px, #ffeda1 20px, #ffeda1 40px);
       display: block;
-      margin: 10px auto;
-      border: 2px solid #ffa726;
-      image-rendering: pixelated;
+      margin: auto;
+      border-radius: 20px;
     }
 
-    #score {
-      font-size: 18px;
-      margin-bottom: 10px;
+    .nav-buttons, .end-screen {
+      position: absolute;
+      top: 10px; left: 10px;
+      display: flex;
+      gap: 10px;
     }
 
-    #countdown {
-      font-size: 32px;
-      color: #ff6f00;
-      margin-top: 20px;
+    .nav-buttons button, .end-screen button {
+      padding: 6px 12px;
+      background: #ff9900;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
     }
 
-    #guide, #leaderboard, #popup {
-      padding: 20px;
-      background: #fff7eb;
-      border-radius: 12px;
-      margin: 20px auto;
-    }
-
-    #leaderboard ul {
-      list-style: none;
-      padding: 0;
-    }
-
-    #leaderboard li {
-      background: #ffe0b2;
-      margin: 5px;
-      padding: 10px;
-      border-radius: 8px;
-    }
-
-    .snake-part {
-      border-radius: 50%;
-      background: #000;
+    .end-screen {
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: rgba(0,0,0,0.5);
+      width: 100%; height: 100%;
     }
   </style>
 </head>
 <body>
-  <div id="landing">
-    <h1>🍊 Welcome to Orange Snake</h1>
-    <div id="formContainer">
-      <input type="text" id="playerName" placeholder="Your Name" required />
-      <input type="file" id="playerImage" accept="image/*" required />
-      <button onclick="startGameFromForm()">Start Game</button>
+  <div class="landing" id="landing">
+    <h1>Welcome to Orange Snake Game 🍊</h1>
+    <button onclick="goToForm()">Continue</button>
+  </div>
+
+  <div class="form-page hidden" id="formPage">
+    <div class="form-box">
+      <h2>Enter Your Name & Upload Picture</h2>
+      <input type="text" id="playerName" placeholder="Enter your name (.SIGN required)" />
+      <input type="file" id="playerImage" accept="image/*" />
+      <button id="startGameBtn" disabled onclick="prepareGame()">Start the Game</button>
     </div>
   </div>
 
-  <div id="nav">
-    <button onclick="showPage('game-container')">Game</button>
-    <button onclick="showPage('leaderboard')">Leaderboard</button>
-    <button onclick="showPage('guide')">Guide</button>
+  <div class="game-container hidden" id="gameContainer">
+    <canvas id="canvas" width="400" height="400"></canvas>
+    <div class="nav-buttons">
+      <button onclick="showLeaderboard()">Leaderboard</button>
+      <button onclick="showGuide()">Guide</button>
+    </div>
+    <div class="end-screen hidden" id="endScreen">
+      <h2>Game Over!</h2>
+      <p id="finalScore"></p>
+      <button onclick="shareToX()">Share to X</button>
+      <button onclick="tryAgain()">Try Again</button>
+    </div>
   </div>
 
-  <div id="game-container">
-    <canvas id="gameCanvas" width="400" height="400"></canvas>
-    <div id="score">ORANGE = 0 | 🏆 High Score: 0</div>
-    <div id="countdown"></div>
+  <div class="leaderboard hidden" id="leaderboard">
+    <h2>Leaderboard 🏆</h2>
+    <div id="topScores"></div>
+    <button onclick="goBackToGame()">Back to Game</button>
   </div>
 
-  <div id="leaderboard">
-    <h2>Leaderboard</h2>
-    <ul id="leaderboardList"></ul>
+  <div class="guide-page hidden" id="guidePage">
+    <h2>Guide 📖</h2>
+    <p>- Use WASD or Arrow Keys to move</p>
+    <p>- Eat 🍊 to grow and score</p>
+    <p>- Your snake gets faster as it grows!</p>
+    <button onclick="goBackToGame()">Back to Game</button>
   </div>
 
-  <div id="guide">
-    <h2>How to Play</h2>
-    <p>Use <strong>WASD</strong> or <strong>Arrow keys</strong> to control the snake.</p>
-    <p>Eat oranges to grow and increase speed.</p>
-    <p>Leaderboard shows top 3 players based on score.</p>
-  </div>
-
-  <div id="popup">
-    <h2>Game Over</h2>
-    <p id="finalScore"></p>
-    <button onclick="restartGame()">Try Again</button>
-    <a id="shareBtn" href="#" target="_blank">Share on X</a>
-  </div>
-
-  <audio id="eatSound" src="https://cdn.pixabay.com/audio/2022/10/25/audio_10e36e10fd.mp3"></audio>
   <script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const scoreDisplay = document.getElementById('score');
-    const countdownEl = document.getElementById('countdown');
-    const popup = document.getElementById('popup');
-    const finalScore = document.getElementById('finalScore');
-    const shareBtn = document.getElementById('shareBtn');
-    const leaderboardList = document.getElementById('leaderboardList');
-    const eatSound = document.getElementById('eatSound');
+    let playerData = {}, canvas, ctx, snake = [], food = {}, direction = 'RIGHT', score = 0, speed = 100;
+    const imgHead = new Image();
+    imgHead.src = 'xin.jpg';
+    const orangeImg = new Image();
+    orangeImg.src = 'https://img.icons8.com/emoji/48/orange-emoji.png';
 
-    const gridSize = 20;
-    const tileCount = canvas.width / gridSize;
+    const landing = document.getElementById('landing');
+    const formPage = document.getElementById('formPage');
+    const gameContainer = document.getElementById('gameContainer');
+    const leaderboard = document.getElementById('leaderboard');
+    const guidePage = document.getElementById('guidePage');
+    const startBtn = document.getElementById('startGameBtn');
 
-    let snake = [];
-    let orange = { x: 15, y: 15 };
-    let dx = 0;
-    let dy = 0;
-    let score = 0;
-    let speed = 100;
-    let started = false;
-    let gameOver = false;
-    let player = {};
+    document.getElementById('playerName').addEventListener('input', checkInput);
+    document.getElementById('playerImage').addEventListener('change', checkInput);
 
-    function startGameFromForm() {
+    function checkInput() {
       const name = document.getElementById('playerName').value;
       const file = document.getElementById('playerImage').files[0];
-      if (!name || !file) return alert('Enter name and upload picture');
-      const reader = new FileReader();
-      reader.onload = () => {
-        player = { name, image: reader.result };
-        document.getElementById('landing').style.display = 'none';
-        showPage('game-container');
-        resetGame();
-      };
-      reader.readAsDataURL(file);
+      startBtn.disabled = !(name.includes('.SIGN') && file);
     }
 
-    function showPage(id) {
-      ['game-container', 'leaderboard', 'guide'].forEach(p => document.getElementById(p).style.display = 'none');
-      document.getElementById(id).style.display = 'block';
+    function goToForm() {
+      landing.classList.add('hidden');
+      formPage.classList.remove('hidden');
     }
 
-    document.addEventListener('keydown', e => {
-      if (!started && ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','a','s','d'].includes(e.key.toLowerCase())) {
-        startCountdown();
-        started = true;
-      }
-      if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') if (dx === 0) { dx = -1; dy = 0; }
-      if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') if (dx === 0) { dx = 1; dy = 0; }
-      if (e.key === 'ArrowUp' || e.key.toLowerCase() === 'w') if (dy === 0) { dx = 0; dy = -1; }
-      if (e.key === 'ArrowDown' || e.key.toLowerCase() === 's') if (dy === 0) { dx = 0; dy = 1; }
-    });
+    function prepareGame() {
+      const name = document.getElementById('playerName').value;
+      const image = URL.createObjectURL(document.getElementById('playerImage').files[0]);
+      playerData = { name, image };
+      formPage.classList.add('hidden');
+      gameContainer.classList.remove('hidden');
+      countdownAndStart();
+    }
 
-    function startCountdown() {
+    function countdownAndStart() {
       let count = 3;
-      countdownEl.innerText = count;
+      const countDiv = document.createElement('div');
+      countDiv.style.position = 'absolute';
+      countDiv.style.fontSize = '48px';
+      countDiv.style.color = '#ff9900';
+      countDiv.style.top = '50%';
+      countDiv.style.left = '50%';
+      countDiv.style.transform = 'translate(-50%, -50%)';
+      gameContainer.appendChild(countDiv);
       const interval = setInterval(() => {
-        count--;
-        if (count > 0) countdownEl.innerText = count;
-        else {
-          countdownEl.innerText = '';
+        if (count === 0) {
+          countDiv.remove();
           clearInterval(interval);
-          gameLoop();
+          initGame();
+        } else {
+          countDiv.textContent = count--;
         }
       }, 1000);
     }
 
-    function resetGame() {
-      snake = [{ x: 10, y: 10 }];
-      dx = 0;
-      dy = 0;
+    function initGame() {
+      canvas = document.getElementById('canvas');
+      ctx = canvas.getContext('2d');
+      document.addEventListener('keydown', changeDirection);
+      snake = [{ x: 160, y: 160 }];
+      direction = 'RIGHT';
       score = 0;
       speed = 100;
-      gameOver = false;
-      placeOrange();
-      updateScore();
+      placeFood();
+      gameLoop();
+    }
+
+    function placeFood() {
+      food = {
+        x: Math.floor(Math.random() * 20) * 20,
+        y: Math.floor(Math.random() * 20) * 20,
+      };
+    }
+
+    function changeDirection(e) {
+      const key = e.key;
+      if (["ArrowUp", "w"].includes(key) && direction !== 'DOWN') direction = 'UP';
+      if (["ArrowDown", "s"].includes(key) && direction !== 'UP') direction = 'DOWN';
+      if (["ArrowLeft", "a"].includes(key) && direction !== 'RIGHT') direction = 'LEFT';
+      if (["ArrowRight", "d"].includes(key) && direction !== 'LEFT') direction = 'RIGHT';
     }
 
     function gameLoop() {
-      if (gameOver) {
-        finalScore.innerText = `Your Score: ${score}`;
-        shareBtn.href = `https://twitter.com/intent/tweet?text=I scored ${score} in Orange Snake! 🍊&url=https://yourvercelurl.com`;
-        popup.style.display = 'block';
-        saveHighScore();
-        loadLeaderboard();
-        return;
+      let head = { ...snake[0] };
+      if (direction === 'UP') head.y -= 20;
+      if (direction === 'DOWN') head.y += 20;
+      if (direction === 'LEFT') head.x -= 20;
+      if (direction === 'RIGHT') head.x += 20;
+
+      if (head.x < 0 || head.y < 0 || head.x >= 400 || head.y >= 400 || snake.some(seg => seg.x === head.x && seg.y === head.y)) {
+        return endGame();
       }
 
-      setTimeout(() => {
-        update();
-        draw();
-        requestAnimationFrame(gameLoop);
-      }, speed);
-    }
-
-    function update() {
-      const head = { x: snake[0].x + dx, y: snake[0].y + dy };
-      if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount || snake.some(p => p.x === head.x && p.y === head.y)) {
-        gameOver = true;
-        return;
-      }
       snake.unshift(head);
-      if (head.x === orange.x && head.y === orange.y) {
+
+      if (head.x === food.x && head.y === food.y) {
         score++;
-        eatSound.play();
-        placeOrange();
-        speed = Math.max(30, speed - 2);
+        speed = Math.max(40, speed - 5);
+        placeFood();
       } else {
         snake.pop();
       }
-      updateScore();
-    }
 
-    function draw() {
-      ctx.fillStyle = '#fff3e0';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      for (let part of snake) {
-        ctx.fillStyle = '#000';
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      snake.forEach((seg, i) => {
         ctx.beginPath();
-        ctx.arc(part.x * gridSize + gridSize / 2, part.y * gridSize + gridSize / 2, gridSize / 2 - 2, 0, Math.PI * 2);
+        ctx.fillStyle = '#000';
+        ctx.arc(seg.x + 10, seg.y + 10, 10, 0, Math.PI * 2);
         ctx.fill();
-      }
-
-      ctx.drawImage(new Image(), orange.x * gridSize, orange.y * gridSize, gridSize, gridSize);
-    }
-
-    function placeOrange() {
-      orange.x = Math.floor(Math.random() * tileCount);
-      orange.y = Math.floor(Math.random() * tileCount);
-    }
-
-    function updateScore() {
-      scoreDisplay.innerText = `ORANGE = ${score} | 🏆 High Score: ${localStorage.getItem('highScore') || 0}`;
-    }
-
-    function saveHighScore() {
-      let board = JSON.parse(localStorage.getItem('leaderboard')) || [];
-      board.push({ name: player.name, image: player.image, score });
-      board.sort((a, b) => b.score - a.score);
-      board = board.slice(0, 3);
-      localStorage.setItem('leaderboard', JSON.stringify(board));
-      localStorage.setItem('highScore', Math.max(score, localStorage.getItem('highScore') || 0));
-    }
-
-    function loadLeaderboard() {
-      leaderboardList.innerHTML = '';
-      const board = JSON.parse(localStorage.getItem('leaderboard')) || [];
-      board.forEach((entry, index) => {
-        const li = document.createElement('li');
-        li.innerHTML = `<strong>${index + 1}.</strong> <img src="${entry.image}" width="20" style="border-radius:50%"> ${entry.name} - ${entry.score} 🍊`;
-        leaderboardList.appendChild(li);
+        if (i === 0) ctx.drawImage(imgHead, seg.x, seg.y, 20, 20);
       });
+      ctx.drawImage(orangeImg, food.x, food.y, 20, 20);
+
+      setTimeout(gameLoop, speed);
     }
 
-    function restartGame() {
-      popup.style.display = 'none';
-      resetGame();
-      started = false;
+    function endGame() {
+      document.getElementById('endScreen').classList.remove('hidden');
+      document.getElementById('finalScore').textContent = `${playerData.name} scored ${score} ORANGES 🍊`;
+      saveToLeaderboard();
     }
 
-    showPage('landing');
+    function saveToLeaderboard() {
+      const scores = JSON.parse(localStorage.getItem('snakeScores') || '[]');
+      scores.push({ ...playerData, score });
+      localStorage.setItem('snakeScores', JSON.stringify(scores.sort((a,b)=>b.score-a.score).slice(0, 3)));
+    }
+
+    function tryAgain() {
+      document.getElementById('endScreen').classList.add('hidden');
+      initGame();
+    }
+
+    function showLeaderboard() {
+      gameContainer.classList.add('hidden');
+      leaderboard.classList.remove('hidden');
+      const scores = JSON.parse(localStorage.getItem('snakeScores') || '[]');
+      document.getElementById('topScores').innerHTML = scores.map((p,i)=>`<div><img src="${p.image}" width="50" style="border-radius:50%"> 🥇${i+1}. ${p.name}: ${p.score} 🍊</div>`).join('');
+    }
+
+    function showGuide() {
+      gameContainer.classList.add('hidden');
+      guidePage.classList.remove('hidden');
+    }
+
+    function goBackToGame() {
+      leaderboard.classList.add('hidden');
+      guidePage.classList.add('hidden');
+      gameContainer.classList.remove('hidden');
+    }
+
+    function shareToX() {
+      const tweet = `I just scored ${score} ORANGES 🍊 in the Orange Snake Game! #OrangeSnakeGame`;
+      const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweet)}`;
+      window.open(url, '_blank');
+    }
   </script>
 </body>
 </html>
