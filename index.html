@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Snake.SIGN</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    .hidden { display: none; }
+  </style>
 </head>
 <body>
   <div id="landingPage">
@@ -38,6 +41,47 @@
     <button onclick="document.getElementById('leaderboard').classList.add('hidden')">Close</button>
   </div>
 
-  <script src="script.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const playerName = document.getElementById("playerName");
+      const playerImage = document.getElementById("playerImage");
+      const startBtn = document.getElementById("startBtn");
+
+      function validateInputs() {
+        const nameValid = playerName.value.trim().toUpperCase().endsWith(".SIGN");
+        const imageValid = playerImage.files.length > 0;
+
+        startBtn.disabled = !(nameValid && imageValid);
+      }
+
+      playerName.addEventListener("input", validateInputs);
+      playerImage.addEventListener("change", validateInputs);
+
+      startBtn.addEventListener("click", () => {
+        const name = playerName.value.trim();
+
+        if (!name.toUpperCase().endsWith(".SIGN")) {
+          alert("Name must end with .SIGN");
+          return;
+        }
+
+        if (playerImage.files.length === 0) {
+          alert("Please upload a picture.");
+          return;
+        }
+
+        // Store name in localStorage
+        localStorage.setItem("playerName", name);
+
+        // Read image as base64 and store
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          localStorage.setItem("playerImage", e.target.result);
+          window.location.href = "game.html"; // Redirect to game
+        };
+        reader.readAsDataURL(playerImage.files[0]);
+      });
+    });
+  </script>
 </body>
 </html>
