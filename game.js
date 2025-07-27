@@ -8,12 +8,12 @@ let canvasHeight = window.innerHeight < 600 ? 300 : 600;
 canvas.width = canvasWidth;
 canvas.height = canvasHeight;
 
-let snake;
-let direction;
-let score;
+let snake = [];
+let direction = "RIGHT";
+let score = 0;
 let food;
 let game;
-let isGameRunning = false;
+let speed = 100;
 
 const foodImg = new Image();
 foodImg.src = "orange.png";
@@ -30,18 +30,19 @@ function initGame() {
   snake = [{ x: 5 * box, y: 5 * box }];
   direction = "RIGHT";
   score = 0;
+  speed = 100;
+
   food = {
     x: Math.floor(Math.random() * (canvasWidth / box)) * box,
     y: Math.floor(Math.random() * (canvasHeight / box)) * box,
   };
 
-  document.getElementById("startScreen").style.display = "none";
-  document.getElementById("gameOver").style.display = "none";
+  document.getElementById("gameOverPopup").classList.add("hidden");
+  document.getElementById("score").textContent = score;
   canvas.style.display = "block";
 
   if (game) clearInterval(game);
-  game = setInterval(draw, 100);
-  isGameRunning = true;
+  game = setInterval(draw, speed);
 }
 
 function draw() {
@@ -49,14 +50,15 @@ function draw() {
 
   // Draw snake
   for (let i = 0; i < snake.length; i++) {
+    ctx.beginPath();
     if (i === 0) {
       ctx.drawImage(headImg, snake[i].x, snake[i].y, box, box);
     } else {
-      ctx.fillStyle = "#FFA500";
-      ctx.fillRect(snake[i].x, snake[i].y, box, box);
-      ctx.strokeStyle = "#111";
-      ctx.strokeRect(snake[i].x, snake[i].y, box, box);
+      ctx.fillStyle = "#000"; // black body
+      ctx.arc(snake[i].x + box/2, snake[i].y + box/2, box/2, 0, Math.PI * 2);
+      ctx.fill();
     }
+    ctx.closePath();
   }
 
   // Draw food
@@ -88,32 +90,33 @@ function draw() {
 
   let newHead = { x: headX, y: headY };
 
+  // If snake eats food
   if (headX === food.x && headY === food.y) {
     score++;
+    document.getElementById("score").textContent = score;
     food = {
       x: Math.floor(Math.random() * (canvasWidth / box)) * box,
       y: Math.floor(Math.random() * (canvasHeight / box)) * box,
     };
+    clearInterval(game);
+    if (speed > 40) speed -= 5;
+    game = setInterval(draw, speed);
   } else {
     snake.pop();
   }
 
   snake.unshift(newHead);
-
-  // Score
-  ctx.fillStyle = "white";
-  ctx.font = "18px Segoe UI";
-  ctx.fillText("Score: " + score, 10, 20);
 }
 
 function showGameOver(score) {
   canvas.style.display = "none";
-  document.getElementById("gameOver").style.display = "block";
   document.getElementById("finalScore").textContent = score;
-  isGameRunning = false;
+  document.getElementById("gameOverPopup").classList.remove("hidden");
+
+  // Optionally save to localStorage or send to server
 }
 
-// Controls: Arrow Keys and WASD
+// Controls
 document.addEventListener("keydown", (e) => {
   const key = e.key.toLowerCase();
   if ((key === "arrowup" || key === "w") && direction !== "DOWN") direction = "UP";
@@ -122,14 +125,22 @@ document.addEventListener("keydown", (e) => {
   else if ((key === "arrowright" || key === "d") && direction !== "LEFT") direction = "RIGHT";
 });
 
-// Start & Restart buttons
-document.getElementById("startBtn").addEventListener("click", initGame);
-document.getElementById("tryAgainBtn").addEventListener("click", initGame);
+document.getElementById("startGameBtn").addEventListener("click", () => {
+  document.getElementById("startGameBtn").style.display = "none";
+  setTimeout(initGame, 3000); // 3-second countdown if needed
+});
 
-// Resize canvas on window resize
-window.addEventListener("resize", () => {
-  if (isGameRunning) {
-    clearInterval(game);
-    initGame(); // restart game to re-calculate size
-  }
+document.getElementById("tryAgainBtn").addEventListener("click", () => {
+  document.getElementById("startGameBtn").style.display = "block";
+  document.getElementById("gameOverPopup").classList.add("hidden");
+  score = 0;
+  direction = "RIGHT";
+  initGame();
+});
+
+document.getElementById("shareBtn").addEventListener("click", () => {
+  const text = `I scored ${score} on SIGN Snake Game! 🍊🎮 Try it now!`;
+  const url = encodeURIComponent(window.location.href);
+  const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${url}`;
+  window.open(shareUrl, "_blank");
 });
