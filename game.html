@@ -1,1 +1,45 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Snake Game</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="gameContainer">
+    <div id="playerInfo">
+      <img id="playerImage" src="" alt="Player Image" />
+      <h2 id="playerName"></h2>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="popup" class="hidden">
+      <h2>Game Over!</h2>
+      <p id="finalScore"></p>
+      <button onclick="restartGame()">Try Again</button>
+      <a id="shareBtn" href="#" target="_blank">Share on X</a>
+    </div>
+  </div>
+
+  <audio id="bgMusic" src="music.mp3" loop></audio>
+  <audio id="gameOverSound" src="gameover.mp3"></audio>
+
+  <script>
+    // Load name and image from localStorage
+    const name = localStorage.getItem("playerName");
+    const image = localStorage.getItem("playerImage");
+
+    if (!name || !image) {
+      window.location.href = "index.html"; // redirect if missing
+    } else {
+      document.getElementById("playerName").innerText = name;
+      document.getElementById("playerImage").src = image;
+    }
+  </script>
+
+  <script src="game.js"></script>
+</body>
+</html>
