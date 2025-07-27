@@ -3,28 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Snake Game</title>
+  <title>SIGN Snake Game</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="top-bar">
     <button id="guideBtn">Guide</button>
+    <div class="score-display">Score: <span id="score">0</span></div>
     <button id="leaderboardBtn">Leaderboard</button>
   </div>
 
   <div class="game-container">
-    <canvas id="gameCanvas"></canvas>
-    <div id="scoreBoard">Score: <span id="score">0</span></div>
-    <button id="startGameBtn" class="start-button">START GAME</button>
+    <canvas id="gameCanvas" width="520" height="520"></canvas>
+    <button id="startGameBtn">START GAME</button>
   </div>
 
   <div id="gameOverPopup" class="popup hidden">
-    <div class="popup-content">
-      <h2>Game Over!</h2>
-      <p>Your score: <span id="finalScore">0</span></p>
-      <button onclick="restartGame()">Try Again</button>
-      <button onclick="shareOnX()">Share on X</button>
-    </div>
+    <h2>Game Over</h2>
+    <p>Your Score: <span id="finalScore">0</span></p>
+    <button id="tryAgainBtn">Try Again</button>
+    <button id="shareBtn">Share on X</button>
   </div>
 
   <script src="game.js"></script>
