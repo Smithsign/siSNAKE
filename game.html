@@ -2,26 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Snake Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header>
-    <button onclick="location.href='index.html'">Home</button>
-    <button onclick="location.href='leaderboard.html'">Leaderboard</button>
-    <button onclick="toggleGuide()">Guide</button>
-  </header>
-
-  <div id="game-container">
+  <div id="gameContainer">
     <canvas id="gameCanvas"></canvas>
-  </div>
-
-  <div id="gameOverPopup" class="popup hidden">
-    <h2>Game Over</h2>
-    <p>Your Score: <span id="finalScore"></span></p>
-    <button onclick="tryAgain()">Try Again</button>
-    <button onclick="shareOnX()">Share on X</button>
+    <div id="gameOverPopup" class="hidden">
+      <h2>Game Over!</h2>
+      <p>Your score: <span id="finalScore">0</span></p>
+      <button onclick="tryAgain()">Try Again</button>
+      <button onclick="shareOnX()">Share on X</button>
+    </div>
   </div>
 
   <script src="game.js"></script>
