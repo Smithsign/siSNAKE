@@ -8,88 +8,41 @@ const canvasHeight = canvas.height;
 let snake = [{ x: 5 * box, y: 5 * box }];
 let direction = "RIGHT";
 let score = 0;
-let food = randomFoodPosition();
-
-let isGameStarted = false;
-let game;
-
-// Load assets
-const foodImg = new Image();
-foodImg.src = "orange.jpg";
-
-const headImg = new Image();
-headImg.src = "xin.jpg";
-
-// Start button config
-const startBtn = {
-  x: canvasWidth / 2 - 80,
-  y: canvasHeight / 2 - 25,
-  width: 160,
-  height: 50,
-  radius: 15,
-  text: "START GAME"
+let food = {
+  x: Math.floor(Math.random() * (canvasWidth / box)) * box,
+  y: Math.floor(Math.random() * (canvasHeight / box)) * box,
 };
 
-// Draw rounded rectangle
-function drawRoundedRect(x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
-}
+let game;
+let isGameRunning = false;
 
-// Draw initial screen
-function drawStartScreen() {
-  ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+document.addEventListener("keydown", setDirection);
 
-  ctx.fillStyle = "#1e1e1e";
-  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-
-  // Draw Start Button
-  drawRoundedRect(startBtn.x, startBtn.y, startBtn.width, startBtn.height, startBtn.radius);
-  ctx.fillStyle = "#ff8c00";
-  ctx.fill();
-
-  ctx.font = "bold 18px Arial";
-  ctx.fillStyle = "#fff";
-  ctx.textAlign = "center";
-  ctx.fillText(startBtn.text, canvasWidth / 2, canvasHeight / 2 + 6);
-}
-
-drawStartScreen();
-
-function startGame() {
-  isGameStarted = true;
-  snake = [{ x: 5 * box, y: 5 * box }];
-  direction = "RIGHT";
-  score = 0;
-  food = randomFoodPosition();
-  game = setInterval(draw, 100);
+function setDirection(e) {
+  const key = e.key.toLowerCase();
+  if ((key === "arrowup" || key === "w") && direction !== "DOWN") direction = "UP";
+  if ((key === "arrowdown" || key === "s") && direction !== "UP") direction = "DOWN";
+  if ((key === "arrowleft" || key === "a") && direction !== "RIGHT") direction = "LEFT";
+  if ((key === "arrowright" || key === "d") && direction !== "LEFT") direction = "RIGHT";
 }
 
 function draw() {
   ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-  ctx.fillStyle = "#000";
-  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
   // Draw snake
   for (let i = 0; i < snake.length; i++) {
-    if (i === 0) {
-      ctx.drawImage(headImg, snake[i].x, snake[i].y, box, box);
-    } else {
-      ctx.fillStyle = "#ffa500";
-      ctx.fillRect(snake[i].x, snake[i].y, box, box);
-    }
+    ctx.fillStyle = i === 0 ? "#32CD32" : "#FFA500";
+    ctx.fillRect(snake[i].x, snake[i].y, box, box);
+    ctx.strokeStyle = "#222";
+    ctx.strokeRect(snake[i].x, snake[i].y, box, box);
   }
 
   // Draw food
+  const foodImg = new Image();
+  foodImg.src = "orange.png";
+  foodImg.onload = () => {
+    ctx.drawImage(foodImg, food.x, food.y, box, box);
+  };
   ctx.drawImage(foodImg, food.x, food.y, box, box);
 
   // Move snake
@@ -101,11 +54,13 @@ function draw() {
   if (direction === "LEFT") headX -= box;
   if (direction === "RIGHT") headX += box;
 
-  // Game over condition
+  // Check game over
   if (
-    headX < 0 || headX >= canvasWidth ||
-    headY < 0 || headY >= canvasHeight ||
-    snake.some((s, i) => i !== 0 && s.x === headX && s.y === headY)
+    headX < 0 ||
+    headX >= canvasWidth ||
+    headY < 0 ||
+    headY >= canvasHeight ||
+    snake.some((s, index) => index !== 0 && s.x === headX && s.y === headY)
   ) {
     clearInterval(game);
     showGameOver(score);
@@ -117,63 +72,46 @@ function draw() {
   // Eat food
   if (headX === food.x && headY === food.y) {
     score++;
-    food = randomFoodPosition();
+    food = {
+      x: Math.floor(Math.random() * (canvasWidth / box)) * box,
+      y: Math.floor(Math.random() * (canvasHeight / box)) * box,
+    };
   } else {
     snake.pop();
   }
 
   snake.unshift(newHead);
 
-  // Score
+  // Score display
   ctx.fillStyle = "#fff";
-  ctx.font = "16px Arial";
+  ctx.font = "18px Arial";
   ctx.fillText("Score: " + score, 10, 20);
 }
 
-// Get random food position
-function randomFoodPosition() {
-  return {
-    x: Math.floor(Math.random() * (canvasWidth / box)) * box,
-    y: Math.floor(Math.random() * (canvasHeight / box)) * box
-  };
-}
-
-// Mouse click to detect start button
-canvas.addEventListener("click", function (e) {
-  if (!isGameStarted) {
-    const rect = canvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
-
-    if (
-      mx >= startBtn.x && mx <= startBtn.x + startBtn.width &&
-      my >= startBtn.y && my <= startBtn.y + startBtn.height
-    ) {
-      startGame();
-    }
-  }
-});
-
-// Keyboard controls
-document.addEventListener("keydown", (e) => {
-  const key = e.key.toLowerCase();
-  if ((key === "arrowup" || key === "w") && direction !== "DOWN") direction = "UP";
-  if ((key === "arrowdown" || key === "s") && direction !== "UP") direction = "DOWN";
-  if ((key === "arrowleft" || key === "a") && direction !== "RIGHT") direction = "LEFT";
-  if ((key === "arrowright" || key === "d") && direction !== "LEFT") direction = "RIGHT";
-});
-
 // Game over screen
 function showGameOver(score) {
-  ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-  ctx.fillStyle = "#1e1e1e";
-  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-
-  ctx.fillStyle = "#fff";
-  ctx.font = "30px Arial";
-  ctx.textAlign = "center";
-  ctx.fillText("Game Over", canvasWidth / 2, canvasHeight / 2 - 30);
-  ctx.font = "20px Arial";
-  ctx.fillText("Score: " + score, canvasWidth / 2, canvasHeight / 2 + 10);
-  ctx.fillText("Refresh to play again", canvasWidth / 2, canvasHeight / 2 + 40);
+  canvas.style.display = "none";
+  document.getElementById("gameOver").style.display = "block";
+  document.getElementById("finalScore").textContent = score;
 }
+
+// Start game logic
+function startGame() {
+  document.getElementById("startScreen").style.display = "none";
+  canvas.style.display = "block";
+  direction = "RIGHT";
+  snake = [{ x: 5 * box, y: 5 * box }];
+  score = 0;
+  food = {
+    x: Math.floor(Math.random() * (canvasWidth / box)) * box,
+    y: Math.floor(Math.random() * (canvasHeight / box)) * box,
+  };
+  game = setInterval(draw, 100);
+}
+
+document.getElementById("startGameBtn").addEventListener("click", () => {
+  if (!isGameRunning) {
+    isGameRunning = true;
+    startGame();
+  }
+});
