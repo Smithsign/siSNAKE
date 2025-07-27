@@ -1,20 +1,20 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-const box = 20;
-let canvasWidth = window.innerWidth < 600 ? 300 : 600;
-let canvasHeight = window.innerHeight < 600 ? 300 : 600;
-
-canvas.width = canvasWidth;
-canvas.height = canvasHeight;
+// Grid config
+const gridSize = 10;
+const box = Math.floor(Math.min(window.innerWidth, window.innerHeight) * 0.9 / gridSize);
+canvas.width = box * gridSize;
+canvas.height = box * gridSize;
 
 let snake = [];
 let direction = "RIGHT";
 let score = 0;
 let food;
 let game;
-let speed = 100;
+let speed = 150;
 
+// Load images
 const foodImg = new Image();
 foodImg.src = "orange.png";
 
@@ -22,19 +22,14 @@ const headImg = new Image();
 headImg.src = "xin.jpg";
 
 function initGame() {
-  canvasWidth = window.innerWidth < 600 ? 300 : 600;
-  canvasHeight = window.innerHeight < 600 ? 300 : 600;
-  canvas.width = canvasWidth;
-  canvas.height = canvasHeight;
-
-  snake = [{ x: 5 * box, y: 5 * box }];
+  snake = [{ x: 5, y: 5 }];
   direction = "RIGHT";
   score = 0;
-  speed = 100;
+  speed = 150;
 
   food = {
-    x: Math.floor(Math.random() * (canvasWidth / box)) * box,
-    y: Math.floor(Math.random() * (canvasHeight / box)) * box,
+    x: Math.floor(Math.random() * gridSize),
+    y: Math.floor(Math.random() * gridSize)
   };
 
   document.getElementById("gameOverPopup").classList.add("hidden");
@@ -45,62 +40,76 @@ function initGame() {
   game = setInterval(draw, speed);
 }
 
+function drawGrid() {
+  ctx.strokeStyle = "#FFB347";
+  for (let i = 0; i <= gridSize; i++) {
+    ctx.beginPath();
+    ctx.moveTo(i * box, 0);
+    ctx.lineTo(i * box, canvas.height);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(0, i * box);
+    ctx.lineTo(canvas.width, i * box);
+    ctx.stroke();
+  }
+}
+
 function draw() {
-  ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawGrid();
 
   // Draw snake
-  for (let i = 0; i < snake.length; i++) {
-    ctx.beginPath();
-    if (i === 0) {
-      ctx.drawImage(headImg, snake[i].x, snake[i].y, box, box);
+  snake.forEach((segment, index) => {
+    if (index === 0) {
+      ctx.drawImage(headImg, segment.x * box, segment.y * box, box, box);
     } else {
-      ctx.fillStyle = "#000"; // black body
-      ctx.arc(snake[i].x + box/2, snake[i].y + box/2, box/2, 0, Math.PI * 2);
+      ctx.fillStyle = "#000";
+      ctx.beginPath();
+      ctx.arc(segment.x * box + box / 2, segment.y * box + box / 2, box / 2, 0, Math.PI * 2);
       ctx.fill();
     }
-    ctx.closePath();
-  }
+  });
 
   // Draw food
-  ctx.drawImage(foodImg, food.x, food.y, box, box);
+  ctx.drawImage(foodImg, food.x * box, food.y * box, box, box);
 
   // Move snake
-  let headX = snake[0].x;
-  let headY = snake[0].y;
+  const headX = snake[0].x;
+  const headY = snake[0].y;
+  let newHead = { x: headX, y: headY };
 
-  switch (direction) {
-    case "UP": headY -= box; break;
-    case "DOWN": headY += box; break;
-    case "LEFT": headX -= box; break;
-    case "RIGHT": headX += box; break;
-  }
+  if (direction === "UP") newHead.y--;
+  if (direction === "DOWN") newHead.y++;
+  if (direction === "LEFT") newHead.x--;
+  if (direction === "RIGHT") newHead.x++;
 
-  // Game over conditions
+  // Game over
   if (
-    headX < 0 ||
-    headX >= canvasWidth ||
-    headY < 0 ||
-    headY >= canvasHeight ||
-    snake.some((s, index) => index !== 0 && s.x === headX && s.y === headY)
+    newHead.x < 0 ||
+    newHead.x >= gridSize ||
+    newHead.y < 0 ||
+    newHead.y >= gridSize ||
+    snake.some((s, i) => i !== 0 && s.x === newHead.x && s.y === newHead.y)
   ) {
     clearInterval(game);
     showGameOver(score);
     return;
   }
 
-  let newHead = { x: headX, y: headY };
-
-  // If snake eats food
-  if (headX === food.x && headY === food.y) {
+  if (newHead.x === food.x && newHead.y === food.y) {
     score++;
     document.getElementById("score").textContent = score;
     food = {
-      x: Math.floor(Math.random() * (canvasWidth / box)) * box,
-      y: Math.floor(Math.random() * (canvasHeight / box)) * box,
+      x: Math.floor(Math.random() * gridSize),
+      y: Math.floor(Math.random() * gridSize)
     };
-    clearInterval(game);
-    if (speed > 40) speed -= 5;
-    game = setInterval(draw, speed);
+
+    if (speed > 60) {
+      clearInterval(game);
+      speed -= 5;
+      game = setInterval(draw, speed);
+    }
   } else {
     snake.pop();
   }
@@ -112,8 +121,6 @@ function showGameOver(score) {
   canvas.style.display = "none";
   document.getElementById("finalScore").textContent = score;
   document.getElementById("gameOverPopup").classList.remove("hidden");
-
-  // Optionally save to localStorage or send to server
 }
 
 // Controls
@@ -125,16 +132,15 @@ document.addEventListener("keydown", (e) => {
   else if ((key === "arrowright" || key === "d") && direction !== "LEFT") direction = "RIGHT";
 });
 
+// Buttons
 document.getElementById("startGameBtn").addEventListener("click", () => {
   document.getElementById("startGameBtn").style.display = "none";
-  setTimeout(initGame, 3000); // 3-second countdown if needed
+  initGame();
 });
 
 document.getElementById("tryAgainBtn").addEventListener("click", () => {
   document.getElementById("startGameBtn").style.display = "block";
   document.getElementById("gameOverPopup").classList.add("hidden");
-  score = 0;
-  direction = "RIGHT";
   initGame();
 });
 
