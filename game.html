@@ -2,54 +2,30 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Snake Game</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-
-  <!-- Start Screen -->
-  <div id="startScreen" class="screen">
-    <h1>Snake Game</h1>
-    <input type="text" id="playerName" placeholder="Enter your name (e.g. yourname.SIGN)">
-    <input type="file" id="playerImage" accept="image/*">
-    <button id="startBtn" disabled>Start the Game</button>
-    <button onclick="window.location.href='leaderboard.html'">View Leaderboard</button>
+  <div class="top-bar">
+    <button id="guideBtn">Guide</button>
+    <button id="leaderboardBtn">Leaderboard</button>
   </div>
 
-  <!-- Game Canvas -->
-  <canvas id="gameCanvas" width="400" height="400" style="display:none;"></canvas>
-
-  <!-- Game Over Popup -->
-  <div id="gameOver" class="screen" style="display:none;">
-    <h2>Game Over</h2>
-    <p>Your score: <span id="finalScore">0</span></p>
-    <button id="tryAgainBtn">Try Again</button>
-    <button id="shareBtn">Share on X</button>
-    <button onclick="window.location.href='leaderboard.html'">View Leaderboard</button>
+  <div class="game-container">
+    <canvas id="gameCanvas"></canvas>
+    <div id="scoreBoard">Score: <span id="score">0</span></div>
+    <button id="startGameBtn" class="start-button">START GAME</button>
   </div>
 
-  <script>
-    // Enable Start Button when both inputs are valid
-    const nameInput = document.getElementById('playerName');
-    const imageInput = document.getElementById('playerImage');
-    const startBtn = document.getElementById('startBtn');
-
-    function validateInputs() {
-      startBtn.disabled = !(nameInput.value.endsWith('.SIGN') && imageInput.files.length > 0);
-    }
-
-    nameInput.addEventListener('input', validateInputs);
-    imageInput.addEventListener('change', validateInputs);
-
-    // Share on X
-    document.getElementById('shareBtn').addEventListener('click', () => {
-      const score = document.getElementById('finalScore').textContent;
-      const text = encodeURIComponent(`I scored ${score} in the Snake Game! 🐍🍊 Play now!`);
-      const url = `https://twitter.com/intent/tweet?text=${text}`;
-      window.open(url, '_blank');
-    });
-  </script>
+  <div id="gameOverPopup" class="popup hidden">
+    <div class="popup-content">
+      <h2>Game Over!</h2>
+      <p>Your score: <span id="finalScore">0</span></p>
+      <button onclick="restartGame()">Try Again</button>
+      <button onclick="shareOnX()">Share on X</button>
+    </div>
+  </div>
 
   <script src="game.js"></script>
 </body>
