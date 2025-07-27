@@ -7,7 +7,7 @@
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      background-color: #ffecd2;
+      background: linear-gradient(to bottom right, #fff3e0, #ffe0b2);
       color: #333;
       text-align: center;
       margin: 0;
@@ -19,11 +19,28 @@
       color: #ff8c00;
     }
 
-    #game-container {
+    #nav {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin: 20px;
+    }
+
+    #nav button {
+      background-color: #ffa726;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    #game-container, #guide, #leaderboard {
+      display: none;
       margin: 0 auto;
       width: 100%;
       max-width: 420px;
-      position: relative;
     }
 
     canvas {
@@ -39,39 +56,57 @@
       margin-bottom: 10px;
     }
 
-    .controls {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      max-width: 300px;
-      margin: 20px auto;
-      gap: 10px;
+    #countdown {
+      font-size: 32px;
+      color: #ff6f00;
+      margin-top: 20px;
     }
 
-    .controls button {
-      background-color: #ff9800;
-      color: white;
-      border: none;
-      padding: 15px;
-      font-size: 16px;
-      border-radius: 10px;
-      cursor: pointer;
+    #guide, #leaderboard {
+      padding: 20px;
+      background: #fff7eb;
+      border-radius: 12px;
+      margin: 20px auto;
+    }
+
+    #leaderboard ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    #leaderboard li {
+      background: #ffe0b2;
+      margin: 5px;
+      padding: 10px;
+      border-radius: 8px;
     }
   </style>
 </head>
 <body>
-  <h1>🍊 Orange Snake</h1>
+  <h1>🍊 Orange Snake Game</h1>
+  <div id="nav">
+    <button onclick="showPage('game-container')">Game</button>
+    <button onclick="showPage('leaderboard')">Leaderboard</button>
+    <button onclick="showPage('guide')">Guide</button>
+  </div>
+
   <div id="game-container">
     <canvas id="gameCanvas" width="400" height="400"></canvas>
     <div id="score">Score: 0 | High Score: 0</div>
+    <div id="countdown"></div>
   </div>
 
-  <div class="controls">
-    <button onclick="setDirection(0, -1)">⬆️</button>
-    <button onclick="setDirection(-1, 0)">⬅️</button>
-    <button onclick="setDirection(1, 0)">➡️</button>
-    <div></div>
-    <button onclick="setDirection(0, 1)" style="grid-column: 2 / span 1;">⬇️</button>
-    <div></div>
+  <div id="leaderboard">
+    <h2>Leaderboard</h2>
+    <ul id="leaderboardList"></ul>
+  </div>
+
+  <div id="guide">
+    <h2>How to Play</h2>
+    <p>Use <strong>WASD</strong> or <strong>Arrow keys</strong> to control the snake.</p>
+    <p>Eat oranges to grow and increase your speed.</p>
+    <p>The game starts when you press any movement key.</p>
+    <p>Your score is saved to the leaderboard if it's a high score!</p>
   </div>
 
   <audio id="eatSound" src="https://cdn.pixabay.com/audio/2022/10/25/audio_10e36e10fd.mp3"></audio>
@@ -80,42 +115,67 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const scoreDisplay = document.getElementById('score');
+    const leaderboardList = document.getElementById('leaderboardList');
+    const countdownEl = document.getElementById('countdown');
     const eatSound = document.getElementById('eatSound');
+    const snakeHeadImage = new Image();
+    snakeHeadImage.src = 'xin.jpg';
 
     const gridSize = 20;
     const tileCount = canvas.width / gridSize;
 
-    let snake = [{ x: 10, y: 10 }];
-    let orange = { x: 15, y: 15 };
-    let dx = 1;
-    let dy = 0;
-    let score = 0;
-    let highScore = localStorage.getItem('highScore') || 0;
-    let gameOver = false;
+    let snake, orange, dx, dy, score, highScore, speed, gameOver;
+    let started = false;
+
+    function resetGame() {
+      snake = [{ x: 10, y: 10 }];
+      orange = { x: 15, y: 15 };
+      dx = 0;
+      dy = 0;
+      score = 0;
+      speed = 100;
+      gameOver = false;
+      updateScore();
+    }
+
+    function showPage(id) {
+      document.querySelectorAll('#game-container, #leaderboard, #guide').forEach(el => el.style.display = 'none');
+      document.getElementById(id).style.display = 'block';
+    }
 
     document.addEventListener('keydown', (e) => {
-      switch (e.key) {
-        case 'ArrowLeft': if (dx === 0) { dx = -1; dy = 0; } break;
-        case 'ArrowRight': if (dx === 0) { dx = 1; dy = 0; } break;
-        case 'ArrowUp': if (dy === 0) { dx = 0; dy = -1; } break;
-        case 'ArrowDown': if (dy === 0) { dx = 0; dy = 1; } break;
+      if (!started && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd'].includes(e.key.toLowerCase())) {
+        startCountdown();
+        started = true;
       }
+      if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') if (dx === 0) { dx = -1; dy = 0; }
+      if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') if (dx === 0) { dx = 1; dy = 0; }
+      if (e.key === 'ArrowUp' || e.key.toLowerCase() === 'w') if (dy === 0) { dx = 0; dy = -1; }
+      if (e.key === 'ArrowDown' || e.key.toLowerCase() === 's') if (dy === 0) { dx = 0; dy = 1; }
     });
 
-    function setDirection(newDx, newDy) {
-      if (dx !== -newDx && dy !== -newDy) {
-        dx = newDx;
-        dy = newDy;
-      }
+    function startCountdown() {
+      let count = 3;
+      countdownEl.innerText = count;
+      let countdown = setInterval(() => {
+        count--;
+        if (count > 0) {
+          countdownEl.innerText = count;
+        } else {
+          countdownEl.innerText = '';
+          clearInterval(countdown);
+          gameLoop();
+        }
+      }, 1000);
     }
 
     function gameLoop() {
       if (gameOver) {
-        ctx.fillStyle = '#ff5722';
+        ctx.fillStyle = '#f44336';
         ctx.font = '28px Arial';
         ctx.fillText('Game Over!', 110, 200);
-        ctx.font = '16px Arial';
-        ctx.fillText('Refresh to play again', 130, 230);
+        saveHighScore(score);
+        loadLeaderboard();
         return;
       }
 
@@ -123,35 +183,23 @@
         update();
         draw();
         requestAnimationFrame(gameLoop);
-      }, 100);
+      }, speed);
     }
 
     function update() {
       const head = { x: snake[0].x + dx, y: snake[0].y + dy };
-
-      if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
+      if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount || snake.some(p => p.x === head.x && p.y === head.y)) {
         gameOver = true;
         return;
       }
-
-      for (let part of snake) {
-        if (part.x === head.x && part.y === head.y) {
-          gameOver = true;
-          return;
-        }
-      }
-
       snake.unshift(head);
 
       if (head.x === orange.x && head.y === orange.y) {
         score += 10;
+        speed = Math.max(30, speed - 5);
         eatSound.play();
-        if (score > highScore) {
-          highScore = score;
-          localStorage.setItem('highScore', highScore);
-        }
-        updateScore();
         placeOrange();
+        updateScore();
       } else {
         snake.pop();
       }
@@ -161,21 +209,25 @@
       ctx.fillStyle = '#fff3e0';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+      ctx.strokeStyle = '#ffe0b2';
       for (let x = 0; x < tileCount; x++) {
         for (let y = 0; y < tileCount; y++) {
-          ctx.strokeStyle = '#ffe0b2';
           ctx.strokeRect(x * gridSize, y * gridSize, gridSize, gridSize);
         }
       }
 
-      ctx.fillStyle = '#fb8c00';
-      for (let part of snake) {
-        ctx.fillRect(part.x * gridSize, part.y * gridSize, gridSize - 2, gridSize - 2);
+      for (let i = 0; i < snake.length; i++) {
+        if (i === 0) {
+          ctx.drawImage(snakeHeadImage, snake[i].x * gridSize, snake[i].y * gridSize, gridSize, gridSize);
+        } else {
+          ctx.fillStyle = '#000';
+          ctx.fillRect(snake[i].x * gridSize, snake[i].y * gridSize, gridSize - 2, gridSize - 2);
+        }
       }
 
       ctx.fillStyle = 'orange';
       ctx.beginPath();
-      ctx.arc(orange.x * gridSize + gridSize/2, orange.y * gridSize + gridSize/2, gridSize / 2 - 2, 0, Math.PI * 2);
+      ctx.arc(orange.x * gridSize + gridSize / 2, orange.y * gridSize + gridSize / 2, gridSize / 2 - 2, 0, Math.PI * 2);
       ctx.fill();
     }
 
@@ -185,11 +237,32 @@
     }
 
     function updateScore() {
+      highScore = Math.max(score, localStorage.getItem('highScore') || 0);
+      localStorage.setItem('highScore', highScore);
       scoreDisplay.innerText = `Score: ${score} | High Score: ${highScore}`;
     }
 
-    updateScore();
-    gameLoop();
+    function saveHighScore(newScore) {
+      let leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
+      leaderboard.push({ score: newScore, date: new Date().toLocaleString() });
+      leaderboard.sort((a, b) => b.score - a.score);
+      leaderboard = leaderboard.slice(0, 10);
+      localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+    }
+
+    function loadLeaderboard() {
+      leaderboardList.innerHTML = '';
+      const leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
+      leaderboard.forEach(entry => {
+        const li = document.createElement('li');
+        li.textContent = `${entry.score} pts - ${entry.date}`;
+        leaderboardList.appendChild(li);
+      });
+    }
+
+    resetGame();
+    showPage('game-container');
+    loadLeaderboard();
   </script>
 </body>
 </html>
