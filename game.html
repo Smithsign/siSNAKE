@@ -2,32 +2,32 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SIGN Snake Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Snake Game</title>
   <link rel="stylesheet" href="style.css" />
-
 </head>
 <body>
-  <div class="top-bar">
+  <div class="top-buttons">
     <button id="guideBtn">Guide</button>
-    <div class="score-display">Score: <span id="score">0</span></div>
     <button id="leaderboardBtn">Leaderboard</button>
   </div>
 
-<div id="countdown" class="countdown hidden">3</div>
-// (Ensure IDs match script.js)
-
-
   <div class="game-container">
-    <canvas id="gameCanvas" width="520" height="520"></canvas>
-    <button id="startGameBtn">START GAME</button>
-  </div>
+    <canvas id="gameCanvas" width="600" height="600"></canvas>
 
-  <div id="gameOverPopup" class="popup hidden">
-    <h2>Game Over</h2>
-    <p>Your Score: <span id="finalScore">0</span></p>
-    <button id="tryAgainBtn">Try Again</button>
-    <button id="shareBtn">Share on X</button>
+    <div id="countdown" class="hidden">3</div>
+
+    <button id="startGameBtn" disabled>Start the Game</button>
+
+    <input type="text" id="nameInput" placeholder="Enter name ending in .SIGN" />
+    <input type="file" id="imageInput" accept="image/*" />
+    <img id="previewImage" />
+
+    <div id="gameOverPopup" class="hidden">
+      <p>Game Over! Your Score: <span id="finalScore"></span></p>
+      <button id="tryAgainBtn">Try Again</button>
+      <button id="shareBtn">Share on X</button>
+    </div>
   </div>
 
   <script src="game.js"></script>
