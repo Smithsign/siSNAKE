@@ -5,25 +5,32 @@ const box = 20;
 const canvasWidth = canvas.width;
 const canvasHeight = canvas.height;
 
-let snake = [{ x: 5 * box, y: 5 * box }];
-let direction = "RIGHT";
-let score = 0;
-let food = {
-  x: Math.floor(Math.random() * (canvasWidth / box)) * box,
-  y: Math.floor(Math.random() * (canvasHeight / box)) * box,
-};
-
+let snake;
+let direction;
+let score;
+let food;
 let game;
 let isGameRunning = false;
 
-document.addEventListener("keydown", setDirection);
+const foodImg = new Image();
+foodImg.src = "orange.png"; // make sure orange.png is in the same folder
 
-function setDirection(e) {
-  const key = e.key.toLowerCase();
-  if ((key === "arrowup" || key === "w") && direction !== "DOWN") direction = "UP";
-  if ((key === "arrowdown" || key === "s") && direction !== "UP") direction = "DOWN";
-  if ((key === "arrowleft" || key === "a") && direction !== "RIGHT") direction = "LEFT";
-  if ((key === "arrowright" || key === "d") && direction !== "LEFT") direction = "RIGHT";
+function initGame() {
+  snake = [{ x: 5 * box, y: 5 * box }];
+  direction = "RIGHT";
+  score = 0;
+  food = {
+    x: Math.floor(Math.random() * (canvasWidth / box)) * box,
+    y: Math.floor(Math.random() * (canvasHeight / box)) * box,
+  };
+
+  document.getElementById("startScreen").style.display = "none";
+  document.getElementById("gameOver").style.display = "none";
+  canvas.style.display = "block";
+
+  if (game) clearInterval(game);
+  game = setInterval(draw, 100);
+  isGameRunning = true;
 }
 
 function draw() {
@@ -31,30 +38,27 @@ function draw() {
 
   // Draw snake
   for (let i = 0; i < snake.length; i++) {
-    ctx.fillStyle = i === 0 ? "#32CD32" : "#FFA500";
+    ctx.fillStyle = i === 0 ? "#00FF7F" : "#FFA500";
     ctx.fillRect(snake[i].x, snake[i].y, box, box);
-    ctx.strokeStyle = "#222";
+    ctx.strokeStyle = "#111";
     ctx.strokeRect(snake[i].x, snake[i].y, box, box);
   }
 
   // Draw food
-  const foodImg = new Image();
-  foodImg.src = "orange.png";
-  foodImg.onload = () => {
-    ctx.drawImage(foodImg, food.x, food.y, box, box);
-  };
   ctx.drawImage(foodImg, food.x, food.y, box, box);
 
   // Move snake
   let headX = snake[0].x;
   let headY = snake[0].y;
 
-  if (direction === "UP") headY -= box;
-  if (direction === "DOWN") headY += box;
-  if (direction === "LEFT") headX -= box;
-  if (direction === "RIGHT") headX += box;
+  switch (direction) {
+    case "UP": headY -= box; break;
+    case "DOWN": headY += box; break;
+    case "LEFT": headX -= box; break;
+    case "RIGHT": headX += box; break;
+  }
 
-  // Check game over
+  // Game over conditions
   if (
     headX < 0 ||
     headX >= canvasWidth ||
@@ -69,7 +73,6 @@ function draw() {
 
   let newHead = { x: headX, y: headY };
 
-  // Eat food
   if (headX === food.x && headY === food.y) {
     score++;
     food = {
@@ -82,36 +85,28 @@ function draw() {
 
   snake.unshift(newHead);
 
-  // Score display
-  ctx.fillStyle = "#fff";
-  ctx.font = "18px Arial";
+  // Score
+  ctx.fillStyle = "white";
+  ctx.font = "18px Segoe UI";
   ctx.fillText("Score: " + score, 10, 20);
 }
 
-// Game over screen
 function showGameOver(score) {
   canvas.style.display = "none";
   document.getElementById("gameOver").style.display = "block";
   document.getElementById("finalScore").textContent = score;
+  isGameRunning = false;
 }
 
-// Start game logic
-function startGame() {
-  document.getElementById("startScreen").style.display = "none";
-  canvas.style.display = "block";
-  direction = "RIGHT";
-  snake = [{ x: 5 * box, y: 5 * box }];
-  score = 0;
-  food = {
-    x: Math.floor(Math.random() * (canvasWidth / box)) * box,
-    y: Math.floor(Math.random() * (canvasHeight / box)) * box,
-  };
-  game = setInterval(draw, 100);
-}
-
-document.getElementById("startGameBtn").addEventListener("click", () => {
-  if (!isGameRunning) {
-    isGameRunning = true;
-    startGame();
-  }
+// Controls: Arrow Keys and WASD
+document.addEventListener("keydown", (e) => {
+  const key = e.key.toLowerCase();
+  if ((key === "arrowup" || key === "w") && direction !== "DOWN") direction = "UP";
+  else if ((key === "arrowdown" || key === "s") && direction !== "UP") direction = "DOWN";
+  else if ((key === "arrowleft" || key === "a") && direction !== "RIGHT") direction = "LEFT";
+  else if ((key === "arrowright" || key === "d") && direction !== "LEFT") direction = "RIGHT";
 });
+
+// Start & Restart buttons
+document.getElementById("startBtn").addEventListener("click", initGame);
+document.getElementById("tryAgainBtn").addEventListener("click", initGame);
