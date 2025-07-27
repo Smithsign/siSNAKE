@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Orange Snake Game</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #ffecd2;
+      color: #333;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1 {
+      margin-top: 20px;
+      color: #ff8c00;
+    }
+
+    #game-container {
+      margin: 0 auto;
+      width: 100%;
+      max-width: 420px;
+      position: relative;
+    }
+
+    canvas {
+      background-color: #fff3e0;
+      display: block;
+      margin: 10px auto;
+      border: 2px solid #ffa726;
+      image-rendering: pixelated;
+    }
+
+    #score {
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      max-width: 300px;
+      margin: 20px auto;
+      gap: 10px;
+    }
+
+    .controls button {
+      background-color: #ff9800;
+      color: white;
+      border: none;
+      padding: 15px;
+      font-size: 16px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>🍊 Orange Snake</h1>
+  <div id="game-container">
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <div id="score">Score: 0 | High Score: 0</div>
+  </div>
+
+  <div class="controls">
+    <button onclick="setDirection(0, -1)">⬆️</button>
+    <button onclick="setDirection(-1, 0)">⬅️</button>
+    <button onclick="setDirection(1, 0)">➡️</button>
+    <div></div>
+    <button onclick="setDirection(0, 1)" style="grid-column: 2 / span 1;">⬇️</button>
+    <div></div>
+  </div>
+
+  <audio id="eatSound" src="https://cdn.pixabay.com/audio/2022/10/25/audio_10e36e10fd.mp3"></audio>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreDisplay = document.getElementById('score');
+    const eatSound = document.getElementById('eatSound');
+
+    const gridSize = 20;
+    const tileCount = canvas.width / gridSize;
+
+    let snake = [{ x: 10, y: 10 }];
+    let orange = { x: 15, y: 15 };
+    let dx = 1;
+    let dy = 0;
+    let score = 0;
+    let highScore = localStorage.getItem('highScore') || 0;
+    let gameOver = false;
+
+    document.addEventListener('keydown', (e) => {
+      switch (e.key) {
+        case 'ArrowLeft': if (dx === 0) { dx = -1; dy = 0; } break;
+        case 'ArrowRight': if (dx === 0) { dx = 1; dy = 0; } break;
+        case 'ArrowUp': if (dy === 0) { dx = 0; dy = -1; } break;
+        case 'ArrowDown': if (dy === 0) { dx = 0; dy = 1; } break;
+      }
+    });
+
+    function setDirection(newDx, newDy) {
+      if (dx !== -newDx && dy !== -newDy) {
+        dx = newDx;
+        dy = newDy;
+      }
+    }
+
+    function gameLoop() {
+      if (gameOver) {
+        ctx.fillStyle = '#ff5722';
+        ctx.font = '28px Arial';
+        ctx.fillText('Game Over!', 110, 200);
+        ctx.font = '16px Arial';
+        ctx.fillText('Refresh to play again', 130, 230);
+        return;
+      }
+
+      setTimeout(() => {
+        update();
+        draw();
+        requestAnimationFrame(gameLoop);
+      }, 100);
+    }
+
+    function update() {
+      const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+
+      if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
+        gameOver = true;
+        return;
+      }
+
+      for (let part of snake) {
+        if (part.x === head.x && part.y === head.y) {
+          gameOver = true;
+          return;
+        }
+      }
+
+      snake.unshift(head);
+
+      if (head.x === orange.x && head.y === orange.y) {
+        score += 10;
+        eatSound.play();
+        if (score > highScore) {
+          highScore = score;
+          localStorage.setItem('highScore', highScore);
+        }
+        updateScore();
+        placeOrange();
+      } else {
+        snake.pop();
+      }
+    }
+
+    function draw() {
+      ctx.fillStyle = '#fff3e0';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      for (let x = 0; x < tileCount; x++) {
+        for (let y = 0; y < tileCount; y++) {
+          ctx.strokeStyle = '#ffe0b2';
+          ctx.strokeRect(x * gridSize, y * gridSize, gridSize, gridSize);
+        }
+      }
+
+      ctx.fillStyle = '#fb8c00';
+      for (let part of snake) {
+        ctx.fillRect(part.x * gridSize, part.y * gridSize, gridSize - 2, gridSize - 2);
+      }
+
+      ctx.fillStyle = 'orange';
+      ctx.beginPath();
+      ctx.arc(orange.x * gridSize + gridSize/2, orange.y * gridSize + gridSize/2, gridSize / 2 - 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function placeOrange() {
+      orange.x = Math.floor(Math.random() * tileCount);
+      orange.y = Math.floor(Math.random() * tileCount);
+    }
+
+    function updateScore() {
+      scoreDisplay.innerText = `Score: ${score} | High Score: ${highScore}`;
+    }
+
+    updateScore();
+    gameLoop();
+  </script>
+</body>
+</html>
