@@ -1,48 +1,25 @@
 // script.js
-
 document.addEventListener("DOMContentLoaded", () => {
   const nameInput = document.getElementById("playerName");
   const imageInput = document.getElementById("playerImage");
-  const startButton = document.getElementById("startBtn");
-  const warningText = document.getElementById("warningText"); // Optional: warning message element
+  const startBtn = document.getElementById("startBtn");
 
-  // Function to validate inputs
-  function validateInputs() {
+  function validate() {
     const name = nameInput.value.trim();
-    const hasImage = imageInput.files.length > 0;
-    const validName = name.endsWith(".SIGN");
-
-    if (validName && hasImage) {
-      startButton.disabled = false;
-      startButton.classList.add("active");
-      warningText.style.display = "none"; // Hide warning
-    } else {
-      startButton.disabled = true;
-      startButton.classList.remove("active");
-      warningText.style.display = "block"; // Show warning
-    }
+    const valid = name.toUpperCase().endsWith(".SIGN") && imageInput.files.length > 0;
+    startBtn.disabled = !valid;
   }
 
-  // Input listeners
-  nameInput.addEventListener("input", validateInputs);
-  imageInput.addEventListener("change", validateInputs);
+  nameInput.addEventListener("input", validate);
+  imageInput.addEventListener("change", validate);
 
-  // Start game
-  startButton.addEventListener("click", () => {
-    const name = nameInput.value.trim();
-    const imageFile = imageInput.files[0];
-
-    if (!name.endsWith(".SIGN") || !imageFile) {
-      warningText.style.display = "block";
-      return;
-    }
-
+  startBtn.addEventListener("click", () => {
     const reader = new FileReader();
-    reader.onload = function (e) {
-      localStorage.setItem("playerName", name);
+    reader.onload = e => {
+      localStorage.setItem("playerName", nameInput.value.trim());
       localStorage.setItem("playerImage", e.target.result);
       window.location.href = "game.html";
     };
-    reader.readAsDataURL(imageFile);
+    reader.readAsDataURL(imageInput.files[0]);
   });
 });
