@@ -8,10 +8,17 @@ const canvasHeight = canvas.height;
 let snake = [{ x: 5 * box, y: 5 * box }];
 let direction = "RIGHT";
 let score = 0;
+
 let food = {
   x: Math.floor(Math.random() * (canvasWidth / box)) * box,
   y: Math.floor(Math.random() * (canvasHeight / box)) * box,
 };
+
+const foodImg = new Image();
+foodImg.src = "orange.png";
+
+const headImg = new Image();
+headImg.src = "xin.jpg";
 
 document.addEventListener("keydown", setDirection);
 
@@ -27,13 +34,15 @@ function draw() {
 
   // Draw snake
   for (let i = 0; i < snake.length; i++) {
-    ctx.fillStyle = i === 0 ? "lime" : "orange";
-    ctx.fillRect(snake[i].x, snake[i].y, box, box);
+    if (i === 0) {
+      ctx.drawImage(headImg, snake[i].x, snake[i].y, box, box);
+    } else {
+      ctx.fillStyle = "orange";
+      ctx.fillRect(snake[i].x, snake[i].y, box, box);
+    }
   }
 
   // Draw food
-  const foodImg = new Image();
-  foodImg.src = "orange.jpg";
   ctx.drawImage(foodImg, food.x, food.y, box, box);
 
   // Move snake
@@ -45,7 +54,7 @@ function draw() {
   if (direction === "LEFT") headX -= box;
   if (direction === "RIGHT") headX += box;
 
-  // Game over
+  // Game over conditions
   if (
     headX < 0 ||
     headX >= canvasWidth ||
@@ -60,7 +69,7 @@ function draw() {
 
   let newHead = { x: headX, y: headY };
 
-  // Eat food
+  // Check if food eaten
   if (headX === food.x && headY === food.y) {
     score++;
     food = {
@@ -73,17 +82,24 @@ function draw() {
 
   snake.unshift(newHead);
 
-  // Score display
-  ctx.fillStyle = "white";
-  ctx.font = "20px Arial";
-  ctx.fillText("Score: " + score, 10, 20);
+  // Display score
+  ctx.fillStyle = "#fff";
+  ctx.font = "bold 20px Arial";
+  ctx.fillText("Score: " + score, 10, 25);
 }
 
 function showGameOver(score) {
-  document.getElementById("gameCanvas").style.display = "none";
-  document.getElementById("gameOver").style.display = "block";
-  document.getElementById("finalScore").textContent = score;
-  // TODO: send score to backend
+  const gameCanvas = document.getElementById("gameCanvas");
+  const gameOverPopup = document.getElementById("gameOver");
+  const finalScoreDisplay = document.getElementById("finalScore");
+
+  gameCanvas.style.display = "none";
+  gameOverPopup.style.display = "flex";
+  finalScoreDisplay.textContent = score;
+
+  // Optional: play game over sound
+  const gameOverSound = new Audio("gameover.mp3");
+  gameOverSound.play();
 }
 
 let game = setInterval(draw, 100);
