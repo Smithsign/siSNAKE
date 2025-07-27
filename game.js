@@ -1,115 +1,124 @@
-// game.js
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-const gridSize = 20;
-const cellSize = canvas.width / gridSize;
+const startBtn = document.getElementById("startGameBtn");
+const nameInput = document.getElementById("nameInput");
+const imageInput = document.getElementById("imageInput");
+const previewImage = document.getElementById("previewImage");
+const countdownEl = document.getElementById("countdown");
+const popup = document.getElementById("gameOverPopup");
+const finalScoreEl = document.getElementById("finalScore");
+const tryAgainBtn = document.getElementById("tryAgainBtn");
+const shareBtn = document.getElementById("shareBtn");
+const leaderboardBtn = document.getElementById("leaderboardBtn");
+const guideBtn = document.getElementById("guideBtn");
 
-let snake = [{ x: 10, y: 10 }];
-let direction = null;
-let food = getRandomFood();
+let username = "";
+let userImage = null;
 let score = 0;
-let intervalId = null;
-let countdownEl = document.getElementById("countdown");
+let gameStarted = false;
 
-const headImg = new Image();
-headImg.src = "xin.jpg";
-const foodImg = new Image();
-foodImg.src = "orange.jpg";
+// Enable Start button when both fields are filled
+nameInput.addEventListener("input", checkForm);
+imageInput.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    userImage = file;
+    previewImage.src = URL.createObjectURL(file);
+    previewImage.style.display = "block";
+    checkForm();
+  }
+});
 
-function getRandomFood() {
-  return { x: Math.floor(Math.random() * gridSize), y: Math.floor(Math.random() * gridSize) };
+function checkForm() {
+  const valid = nameInput.value.endsWith(".SIGN") && userImage;
+  startBtn.disabled = !valid;
 }
 
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+startBtn.addEventListener("click", () => {
+  username = nameInput.value.trim();
+  startCountdown();
+});
 
-  // draw snake
-  snake.forEach((seg, i) => {
-    if (i === 0) {
-      ctx.drawImage(headImg, seg.x * cellSize, seg.y * cellSize, cellSize, cellSize);
-    } else {
-      ctx.fillStyle = "#000";
-      ctx.fillRect(seg.x * cellSize, seg.y * cellSize, cellSize, cellSize);
-    }
-  });
-
-  // draw food
-  ctx.drawImage(foodImg, food.x * cellSize, food.y * cellSize, cellSize, cellSize);
-}
-
-function step() {
-  const head = { ...snake[0] };
-
-  switch (direction) {
-    case "ArrowUp": head.y--; break;
-    case "ArrowDown": head.y++; break;
-    case "ArrowLeft": head.x--; break;
-    case "ArrowRight": head.x++; break;
-  }
-
-  if (head.x < 0 || head.x >= gridSize || head.y < 0 || head.y >= gridSize ||
-      snake.some((s, i) => i > 0 && s.x === head.x && s.y === head.y)) {
-    endGame();
-    return;
-  }
-
-  snake.unshift(head);
-  if (head.x === food.x && head.y === food.y) {
-    score++;
-    food = getRandomFood();
-  } else {
-    snake.pop();
-  }
-
-  draw();
-}
-
-function startGame() {
-  countdownEl.style.display = "block";
+function startCountdown() {
   let count = 3;
   countdownEl.textContent = count;
-  const cd = setInterval(() => {
+  countdownEl.classList.remove("hidden");
+  const interval = setInterval(() => {
     count--;
-    if (count === 0) {
-      clearInterval(cd);
-      countdownEl.style.display = "none";
-      document.getElementById("startGameBtn").style.display = "none";
-      document.addEventListener("keydown", keyHandler);
-      intervalId = setInterval(step, 200);
-    } else {
-      countdownEl.textContent = count;
+    countdownEl.textContent = count;
+    if (count <= 0) {
+      clearInterval(interval);
+      countdownEl.classList.add("hidden");
+      startGame();
     }
   }, 1000);
 }
 
-function endGame() {
-  clearInterval(intervalId);
-  document.getElementById("finalScore").textContent = score;
-  document.getElementById("gameOverPopup").classList.remove("hidden");
+function startGame() {
+  gameStarted = true;
+  score = 0;
+  drawInitial();
+  updateGame(); // start game loop
+}
 
-  fetch("submit_score.php", {
+function drawInitial() {
+  ctx.fillStyle = "black";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "white";
+  ctx.font = "30px Arial";
+  ctx.fillText("Game Running...", 180, 300);
+}
+
+// Just a fake game loop for this template
+function updateGame() {
+  if (!gameStarted) return;
+  setTimeout(() => {
+    score += 1;
+    if (score >= 10) {
+      gameOver();
+    } else {
+      updateGame();
+    }
+  }, 500); // dummy loop
+}
+
+function gameOver() {
+  gameStarted = false;
+  finalScoreEl.textContent = score;
+  popup.classList.remove("hidden");
+  submitScore();
+}
+
+tryAgainBtn.addEventListener("click", () => {
+  popup.classList.add("hidden");
+  startGame();
+});
+
+shareBtn.addEventListener("click", () => {
+  const shareText = `I scored ${score} in Snake Game! Try to beat me!`;
+  const shareURL = `https://x.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
+  window.open(shareURL, "_blank");
+});
+
+function submitScore() {
+  const formData = new FormData();
+  formData.append("username", username);
+  formData.append("score", score);
+  formData.append("image", userImage);
+
+  fetch("save_score.php", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      username: localStorage.getItem("playerName"),
-      image: localStorage.getItem("playerImage"),
-      score
-    })
-  });
+    body: formData,
+  }).then(res => res.text())
+    .then(console.log)
+    .catch(console.error);
 }
 
-function keyHandler(e) {
-  const key = e.key;
-  if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(key)) {
-    direction = key;
-  }
-}
+leaderboardBtn.addEventListener("click", () => {
+  window.location.href = "leaderboard.html";
+});
 
-document.getElementById("startGameBtn").addEventListener("click", startGame);
-document.getElementById("tryAgainBtn").addEventListener("click", () => window.location.reload());
-document.getElementById("shareBtn").addEventListener("click", () => {
-  const text = `I scored ${score} in Snake.SIGN!`;
-  const url = encodeURIComponent(location.href);
-  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${url}`, "_blank");
+guideBtn.addEventListener("click", () => {
+  alert("Use arrow keys to control the snake and eat the oranges!");
 });
