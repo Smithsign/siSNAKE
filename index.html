@@ -3,300 +3,282 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Orange Snake Game</title>
+  <title>Snake Game 🍊</title>
   <style>
     * {
-      box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
     }
     body, html {
-      width: 100%;
       height: 100%;
-      background: #fff7e6;
+      background: #fff5e6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       overflow: hidden;
     }
-    .hidden { display: none; }
-
-    .landing, .form-page, .game-container, .leaderboard, .guide-page {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      background: #fff7e6;
-      padding: 20px;
-    }
-
-    h1, h2 {
-      color: #ff9900;
-      margin-bottom: 20px;
-    }
-
-    .form-box {
-      background: white;
+    .container {
+      text-align: center;
       padding: 30px;
       border-radius: 20px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-      text-align: center;
-      width: 100%;
-      max-width: 400px;
+      background: #fff;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+      max-width: 90vw;
     }
-
-    .form-box input[type="text"], .form-box input[type="file"] {
-      padding: 12px;
-      margin-bottom: 15px;
-      width: 100%;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-    }
-
-    .form-box button {
-      padding: 10px 20px;
-      background: #ff9900;
-      color: white;
+    input, button {
+      padding: 15px;
+      border-radius: 12px;
       border: none;
-      border-radius: 10px;
-      font-weight: bold;
-      cursor: pointer;
+      margin: 10px;
+      font-size: 1rem;
     }
-
-    #canvas {
-      background: repeating-linear-gradient(45deg, #fff2cc 0, #fff2cc 20px, #ffeda1 20px, #ffeda1 40px);
-      display: block;
-      margin: auto;
+    input[type="file"] {
+      background: #ffcc80;
+      color: #333;
+    }
+    input[type="text"] {
+      width: 200px;
+      background: #fff3e0;
+    }
+    button {
+      background: #ffa726;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    button:hover:not(:disabled) {
+      background: #fb8c00;
+    }
+    #gameArea, #leaderboard, #guidePage {
+      display: none;
+    }
+    canvas {
+      background: #fff8e1;
+      border: 4px solid #ffa726;
       border-radius: 20px;
     }
-
-    .nav-buttons, .end-screen {
-      position: absolute;
-      top: 10px; left: 10px;
+    #leaderboardList {
+      margin-top: 20px;
+      max-height: 300px;
+      overflow-y: auto;
+      text-align: left;
+    }
+    .nav {
       display: flex;
-      gap: 10px;
-    }
-
-    .nav-buttons button, .end-screen button {
-      padding: 6px 12px;
-      background: #ff9900;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-weight: bold;
-    }
-
-    .end-screen {
-      flex-direction: column;
       justify-content: center;
-      align-items: center;
-      background: rgba(0,0,0,0.5);
-      width: 100%; height: 100%;
+      gap: 15px;
+      margin: 20px 0;
+    }
+    .nav button {
+      padding: 10px 20px;
+      border-radius: 20px;
+    }
+    .scoreboard {
+      margin-top: 15px;
     }
   </style>
 </head>
 <body>
-  <div class="landing" id="landing">
-    <h1>Welcome to Orange Snake Game 🍊</h1>
-    <button onclick="goToForm()">Continue</button>
+  <div class="container" id="landingPage">
+    <h2>Welcome to Orange Snake 🍊</h2>
+    <p>This game requires your SIGN name and picture to proceed.</p>
+    <button onclick="nextStep()">Proceed</button>
   </div>
 
-  <div class="form-page hidden" id="formPage">
-    <div class="form-box">
-      <h2>Enter Your Name & Upload Picture</h2>
-      <input type="text" id="playerName" placeholder="Enter your name (.SIGN required)" />
-      <input type="file" id="playerImage" accept="image/*" />
-      <button id="startGameBtn" disabled onclick="prepareGame()">Start the Game</button>
-    </div>
+  <div class="container" id="userInput" style="display:none;">
+    <h2>Enter Your Info to Play</h2>
+    <input type="text" id="playerName" placeholder="Your Name (.SIGN required)" oninput="validateInput()" />
+    <input type="file" id="playerImage" accept="image/*" onchange="validateInput()" />
+    <br />
+    <button id="startGameBtn" onclick="startCountdown()" disabled>Start the Game</button>
   </div>
 
-  <div class="game-container hidden" id="gameContainer">
-    <canvas id="canvas" width="400" height="400"></canvas>
-    <div class="nav-buttons">
+  <div class="container" id="gamePage" style="display:none; flex-direction: column;">
+    <div class="nav">
+      <button onclick="showGame()">Game</button>
       <button onclick="showLeaderboard()">Leaderboard</button>
       <button onclick="showGuide()">Guide</button>
     </div>
-    <div class="end-screen hidden" id="endScreen">
-      <h2>Game Over!</h2>
-      <p id="finalScore"></p>
-      <button onclick="shareToX()">Share to X</button>
-      <button onclick="tryAgain()">Try Again</button>
+    <div class="scoreboard">
+      <span>Score: <span id="score">0</span> 🍊</span>
     </div>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
   </div>
 
-  <div class="leaderboard hidden" id="leaderboard">
-    <h2>Leaderboard 🏆</h2>
-    <div id="topScores"></div>
-    <button onclick="goBackToGame()">Back to Game</button>
+  <div class="container" id="leaderboard">
+    <h2>Leaderboard (Top 100)</h2>
+    <div id="leaderboardList"></div>
+    <button onclick="showGame()">Back to Game</button>
   </div>
 
-  <div class="guide-page hidden" id="guidePage">
-    <h2>Guide 📖</h2>
-    <p>- Use WASD or Arrow Keys to move</p>
-    <p>- Eat 🍊 to grow and score</p>
-    <p>- Your snake gets faster as it grows!</p>
-    <button onclick="goBackToGame()">Back to Game</button>
+  <div class="container" id="guidePage">
+    <h2>Game Guide</h2>
+    <p>
+      Use WASD or Arrow keys to move the snake.<br>
+      Eat 🍊 oranges to grow and increase your speed.<br>
+      Avoid hitting yourself or the wall.<br>
+      Must include ".SIGN" in your name to play.<br>
+      Upload a photo to show on the leaderboard.
+    </p>
+    <button onclick="showGame()">Back to Game</button>
   </div>
 
   <script>
-    let playerData = {}, canvas, ctx, snake = [], food = {}, direction = 'RIGHT', score = 0, speed = 100;
-    const imgHead = new Image();
-    imgHead.src = 'xin.jpg';
-    const orangeImg = new Image();
-    orangeImg.src = 'https://img.icons8.com/emoji/48/orange-emoji.png';
+    let snake = [{ x: 10, y: 10 }];
+    let food = { x: 5, y: 5 };
+    let dx = 1;
+    let dy = 0;
+    let score = 0;
+    let interval;
+    let speed = 150;
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const gridSize = 20;
+    const tileCount = 20;
 
-    const landing = document.getElementById('landing');
-    const formPage = document.getElementById('formPage');
-    const gameContainer = document.getElementById('gameContainer');
-    const leaderboard = document.getElementById('leaderboard');
-    const guidePage = document.getElementById('guidePage');
-    const startBtn = document.getElementById('startGameBtn');
-
-    document.getElementById('playerName').addEventListener('input', checkInput);
-    document.getElementById('playerImage').addEventListener('change', checkInput);
-
-    function checkInput() {
-      const name = document.getElementById('playerName').value;
-      const file = document.getElementById('playerImage').files[0];
-      startBtn.disabled = !(name.includes('.SIGN') && file);
+    function nextStep() {
+      document.getElementById("landingPage").style.display = "none";
+      document.getElementById("userInput").style.display = "block";
     }
 
-    function goToForm() {
-      landing.classList.add('hidden');
-      formPage.classList.remove('hidden');
+    function validateInput() {
+      const name = document.getElementById("playerName").value;
+      const img = document.getElementById("playerImage").files.length;
+      const btn = document.getElementById("startGameBtn");
+      if (name.includes(".SIGN") && img > 0) {
+        btn.disabled = false;
+      } else {
+        btn.disabled = true;
+      }
     }
 
-    function prepareGame() {
-      const name = document.getElementById('playerName').value;
-      const image = URL.createObjectURL(document.getElementById('playerImage').files[0]);
-      playerData = { name, image };
-      formPage.classList.add('hidden');
-      gameContainer.classList.remove('hidden');
-      countdownAndStart();
-    }
-
-    function countdownAndStart() {
-      let count = 3;
-      const countDiv = document.createElement('div');
-      countDiv.style.position = 'absolute';
-      countDiv.style.fontSize = '48px';
-      countDiv.style.color = '#ff9900';
-      countDiv.style.top = '50%';
-      countDiv.style.left = '50%';
-      countDiv.style.transform = 'translate(-50%, -50%)';
-      gameContainer.appendChild(countDiv);
-      const interval = setInterval(() => {
-        if (count === 0) {
-          countDiv.remove();
-          clearInterval(interval);
-          initGame();
+    function startCountdown() {
+      document.getElementById("userInput").style.display = "none";
+      document.getElementById("gamePage").style.display = "flex";
+      let countdown = 3;
+      const countdownInterval = setInterval(() => {
+        if (countdown === 0) {
+          clearInterval(countdownInterval);
+          startGame();
         } else {
-          countDiv.textContent = count--;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = "#ff9800";
+          ctx.font = "bold 48px sans-serif";
+          ctx.fillText(countdown--, canvas.width / 2 - 10, canvas.height / 2);
         }
       }, 1000);
     }
 
-    function initGame() {
-      canvas = document.getElementById('canvas');
-      ctx = canvas.getContext('2d');
-      document.addEventListener('keydown', changeDirection);
-      snake = [{ x: 160, y: 160 }];
-      direction = 'RIGHT';
+    function startGame() {
+      snake = [{ x: 10, y: 10 }];
+      food = { x: 5, y: 5 };
+      dx = 1; dy = 0;
       score = 0;
-      speed = 100;
-      placeFood();
-      gameLoop();
+      speed = 150;
+      document.getElementById("score").textContent = score;
+      if (interval) clearInterval(interval);
+      interval = setInterval(update, speed);
     }
 
-    function placeFood() {
-      food = {
-        x: Math.floor(Math.random() * 20) * 20,
-        y: Math.floor(Math.random() * 20) * 20,
-      };
-    }
-
-    function changeDirection(e) {
-      const key = e.key;
-      if (["ArrowUp", "w"].includes(key) && direction !== 'DOWN') direction = 'UP';
-      if (["ArrowDown", "s"].includes(key) && direction !== 'UP') direction = 'DOWN';
-      if (["ArrowLeft", "a"].includes(key) && direction !== 'RIGHT') direction = 'LEFT';
-      if (["ArrowRight", "d"].includes(key) && direction !== 'LEFT') direction = 'RIGHT';
-    }
-
-    function gameLoop() {
-      let head = { ...snake[0] };
-      if (direction === 'UP') head.y -= 20;
-      if (direction === 'DOWN') head.y += 20;
-      if (direction === 'LEFT') head.x -= 20;
-      if (direction === 'RIGHT') head.x += 20;
-
-      if (head.x < 0 || head.y < 0 || head.x >= 400 || head.y >= 400 || snake.some(seg => seg.x === head.x && seg.y === head.y)) {
-        return endGame();
-      }
-
+    function update() {
+      const head = { x: snake[0].x + dx, y: snake[0].y + dy };
       snake.unshift(head);
-
       if (head.x === food.x && head.y === food.y) {
         score++;
-        speed = Math.max(40, speed - 5);
+        speed = Math.max(50, speed - 5);
+        document.getElementById("score").textContent = score;
         placeFood();
+        clearInterval(interval);
+        interval = setInterval(update, speed);
       } else {
         snake.pop();
       }
 
+      if (head.x < 0 || head.y < 0 || head.x >= tileCount || head.y >= tileCount || snake.slice(1).some(s => s.x === head.x && s.y === head.y)) {
+        gameOver();
+        return;
+      }
+
+      draw();
+    }
+
+    function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      snake.forEach((seg, i) => {
+
+      ctx.fillStyle = "black";
+      snake.forEach((part, i) => {
         ctx.beginPath();
-        ctx.fillStyle = '#000';
-        ctx.arc(seg.x + 10, seg.y + 10, 10, 0, Math.PI * 2);
+        ctx.arc(part.x * gridSize + 10, part.y * gridSize + 10, 10, 0, Math.PI * 2);
         ctx.fill();
-        if (i === 0) ctx.drawImage(imgHead, seg.x, seg.y, 20, 20);
       });
-      ctx.drawImage(orangeImg, food.x, food.y, 20, 20);
 
-      setTimeout(gameLoop, speed);
+      ctx.fillStyle = "orange";
+      ctx.beginPath();
+      ctx.arc(food.x * gridSize + 10, food.y * gridSize + 10, 10, 0, Math.PI * 2);
+      ctx.fill();
     }
 
-    function endGame() {
-      document.getElementById('endScreen').classList.remove('hidden');
-      document.getElementById('finalScore').textContent = `${playerData.name} scored ${score} ORANGES 🍊`;
-      saveToLeaderboard();
+    function placeFood() {
+      food = {
+        x: Math.floor(Math.random() * tileCount),
+        y: Math.floor(Math.random() * tileCount)
+      };
     }
 
-    function saveToLeaderboard() {
-      const scores = JSON.parse(localStorage.getItem('snakeScores') || '[]');
-      scores.push({ ...playerData, score });
-      localStorage.setItem('snakeScores', JSON.stringify(scores.sort((a,b)=>b.score-a.score).slice(0, 3)));
+    function gameOver() {
+      clearInterval(interval);
+      alert(`Game Over! You scored ${score} 🍊`);
+      const name = document.getElementById("playerName").value;
+      const image = document.getElementById("playerImage").files[0];
+      const reader = new FileReader();
+      reader.onload = () => {
+        const leaderboard = JSON.parse(localStorage.getItem("leaderboard") || "[]");
+        leaderboard.push({ name, score, img: reader.result });
+        leaderboard.sort((a, b) => b.score - a.score);
+        localStorage.setItem("leaderboard", JSON.stringify(leaderboard.slice(0, 100)));
+      };
+      reader.readAsDataURL(image);
     }
 
-    function tryAgain() {
-      document.getElementById('endScreen').classList.add('hidden');
-      initGame();
+    document.addEventListener("keydown", e => {
+      if (["ArrowUp", "w"].includes(e.key) && dy === 0) { dy = -1; dx = 0; }
+      else if (["ArrowDown", "s"].includes(e.key) && dy === 0) { dy = 1; dx = 0; }
+      else if (["ArrowLeft", "a"].includes(e.key) && dx === 0) { dx = -1; dy = 0; }
+      else if (["ArrowRight", "d"].includes(e.key) && dx === 0) { dx = 1; dy = 0; }
+    });
+
+    function showGame() {
+      document.getElementById("gamePage").style.display = "flex";
+      document.getElementById("leaderboard").style.display = "none";
+      document.getElementById("guidePage").style.display = "none";
+      drawLeaderboard();
     }
 
     function showLeaderboard() {
-      gameContainer.classList.add('hidden');
-      leaderboard.classList.remove('hidden');
-      const scores = JSON.parse(localStorage.getItem('snakeScores') || '[]');
-      document.getElementById('topScores').innerHTML = scores.map((p,i)=>`<div><img src="${p.image}" width="50" style="border-radius:50%"> 🥇${i+1}. ${p.name}: ${p.score} 🍊</div>`).join('');
+      document.getElementById("gamePage").style.display = "none";
+      document.getElementById("leaderboard").style.display = "block";
+      drawLeaderboard();
     }
 
     function showGuide() {
-      gameContainer.classList.add('hidden');
-      guidePage.classList.remove('hidden');
+      document.getElementById("gamePage").style.display = "none";
+      document.getElementById("guidePage").style.display = "block";
     }
 
-    function goBackToGame() {
-      leaderboard.classList.add('hidden');
-      guidePage.classList.add('hidden');
-      gameContainer.classList.remove('hidden');
-    }
-
-    function shareToX() {
-      const tweet = `I just scored ${score} ORANGES 🍊 in the Orange Snake Game! #OrangeSnakeGame`;
-      const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweet)}`;
-      window.open(url, '_blank');
+    function drawLeaderboard() {
+      const leaderboard = JSON.parse(localStorage.getItem("leaderboard") || "[]");
+      const board = document.getElementById("leaderboardList");
+      board.innerHTML = leaderboard.map((entry, index) => `
+        <div style="margin: 10px 0; display: flex; align-items: center; gap: 10px;">
+          <img src="${entry.img}" width="40" height="40" style="border-radius: 50%;" />
+          <strong>${index + 1}. ${entry.name}</strong> — ${entry.score} 🍊
+        </div>`).join("");
     }
   </script>
 </body>
