@@ -144,3 +144,14 @@ canvas {
   margin: auto;
 }
 
+.hidden { display: none; }
+.countdown {
+  position: absolute; top: 40%; left:50%;
+  transform: translate(-50%, -50%);
+  font-size: 4rem;
+  color: #fff;
+  z-index: 100;
+}
+/* popup styling, canvas, buttons etc.. */
+.popup { display: none; position: fixed; /*...*/ }
+
