@@ -4,178 +4,84 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Snake Game</title>
-  <link rel="stylesheet" href="style.css" />
   <style>
     body {
       margin: 0;
-      font-family: 'Arial', sans-serif;
-      background: linear-gradient(135deg, #ff9900, #ffcc66);
+      padding: 0;
+      background: linear-gradient(to bottom right, #ff914d, #ffa94d);
+      font-family: 'Segoe UI', sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
+      justify-content: center;
       height: 100vh;
     }
 
-    #topBar {
-      width: 100%;
-      padding: 10px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background-color: rgba(255, 255, 255, 0.1);
-    }
-
-    #topBar button {
-      padding: 10px 20px;
-      background: white;
-      border: none;
-      border-radius: 8px;
-      font-weight: bold;
-      color: #ff9900;
-      cursor: pointer;
-      transition: 0.2s ease;
-    }
-
-    #topBar button:hover {
-      background: #ffcc66;
-    }
-
-    #scoreDisplay {
-      font-size: 1.2rem;
-      color: white;
-      font-weight: bold;
-    }
-
     #gameContainer {
-      width: 100%;
-      max-width: 600px;
-      padding: 20px;
-      text-align: center;
-    }
-
-    #playerInfo {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    #playerImage {
-      width: 100px;
-      height: 100px;
-      object-fit: cover;
-      border-radius: 50%;
-      border: 4px solid white;
-    }
-
-    #playerName {
-      margin-top: 10px;
-      font-size: 1.5rem;
-      color: white;
-      font-weight: bold;
+      position: relative;
     }
 
     #gameCanvas {
-      background-color: #222;
-      display: block;
-      margin: 20px auto;
-      border: 2px solid white;
-      width: 100%;
-      aspect-ratio: 1 / 1;
-      image-rendering: pixelated;
-    }
-
-    #popup {
       display: none;
-      margin-top: 20px;
-      background: white;
-      padding: 20px;
+      background-color: #1e1e1e;
+      border: 5px solid #ffffff;
       border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
     }
 
-    #popup h2 {
-      margin-bottom: 10px;
+    #startScreen {
+      text-align: center;
     }
 
-    #popup button,
-    #popup a {
-      margin: 10px;
-      padding: 10px 20px;
-      background: #ff9900;
+    #startBtn {
+      background-color: #ff6f00;
       color: white;
+      padding: 15px 40px;
+      font-size: 20px;
       border: none;
-      border-radius: 8px;
+      border-radius: 30px;
       cursor: pointer;
-      text-decoration: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      transition: 0.3s ease;
     }
 
-    #popup button:hover,
-    #popup a:hover {
-      background: #cc7a00;
+    #startBtn:hover {
+      background-color: #ff8800;
+      transform: scale(1.05);
+    }
+
+    #gameOver {
+      display: none;
+      text-align: center;
+    }
+
+    #gameOver h2 {
+      color: white;
+    }
+
+    #tryAgainBtn {
+      background-color: #ff6f00;
+      color: white;
+      padding: 10px 30px;
+      font-size: 16px;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <div id="topBar">
-    <button onclick="window.location.href='guide.html'">Guide</button>
-    <div id="scoreDisplay">Points: 0</div>
-    <button onclick="window.location.href='leaderboard.html'">Leaderboard</button>
-  </div>
-
   <div id="gameContainer">
-    <div id="playerInfo">
-      <img id="playerImage" src="" alt="Player Image" />
-      <h2 id="playerName"></h2>
+    <div id="startScreen">
+      <button id="startBtn">START GAME</button>
     </div>
+    <canvas id="gameCanvas" width="600" height="400"></canvas>
 
-    <canvas id="gameCanvas" width="400" height="400"></canvas>
-
-    <div id="popup">
+    <div id="gameOver">
       <h2>Game Over!</h2>
-      <p id="finalScore">Score: 0</p>
-      <button onclick="restartGame()">Try Again</button>
-      <a id="shareBtn" href="#" target="_blank">Share on X</a>
+      <p>Your Score: <span id="finalScore">0</span></p>
+      <button id="tryAgainBtn">Try Again</button>
     </div>
   </div>
-
-  <audio id="bgMusic" src="music.mp3" loop></audio>
-  <audio id="gameOverSound" src="gameover.mp3"></audio>
-
-  <script>
-    // Load name and image from localStorage
-    const name = localStorage.getItem("playerName");
-    const image = localStorage.getItem("playerImage");
-
-    if (!name || !image) {
-      window.location.href = "index.html"; // redirect if missing
-    } else {
-      document.getElementById("playerName").innerText = name;
-      document.getElementById("playerImage").src = image;
-    }
-
-    // Display score during gameplay
-    function updateScoreDisplay(score) {
-      const scoreEl = document.getElementById("scoreDisplay");
-      if (scoreEl) {
-        scoreEl.innerText = "Points: " + score;
-      }
-    }
-
-    function showGameOver(score) {
-      document.getElementById("finalScore").innerText = "Score: " + score;
-      document.getElementById("popup").style.display = "block";
-
-      const shareText = `I scored ${score} in the SIGN Snake Game! 🐍🍊 Can you beat me?`;
-      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=https://your-vercel-game-url.vercel.app`;
-      document.getElementById("shareBtn").href = twitterUrl;
-    }
-
-    function restartGame() {
-      window.location.href = "game.html";
-    }
-  </script>
 
   <script src="game.js"></script>
 </body>
