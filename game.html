@@ -17,6 +17,36 @@
       height: 100vh;
     }
 
+    #topBar {
+      width: 100%;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    #topBar button {
+      padding: 10px 20px;
+      background: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      color: #ff9900;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    #topBar button:hover {
+      background: #ffcc66;
+    }
+
+    #scoreDisplay {
+      font-size: 1.2rem;
+      color: white;
+      font-weight: bold;
+    }
+
     #gameContainer {
       width: 100%;
       max-width: 600px;
@@ -49,7 +79,7 @@
     #gameCanvas {
       background-color: #222;
       display: block;
-      margin: 0 auto;
+      margin: 20px auto;
       border: 2px solid white;
       width: 100%;
       aspect-ratio: 1 / 1;
@@ -88,6 +118,12 @@
   </style>
 </head>
 <body>
+  <div id="topBar">
+    <button onclick="window.location.href='guide.html'">Guide</button>
+    <div id="scoreDisplay">Points: 0</div>
+    <button onclick="window.location.href='leaderboard.html'">Leaderboard</button>
+  </div>
+
   <div id="gameContainer">
     <div id="playerInfo">
       <img id="playerImage" src="" alt="Player Image" />
@@ -117,6 +153,23 @@
     } else {
       document.getElementById("playerName").innerText = name;
       document.getElementById("playerImage").src = image;
+    }
+
+    // Display score during gameplay
+    function updateScoreDisplay(score) {
+      const scoreEl = document.getElementById("scoreDisplay");
+      if (scoreEl) {
+        scoreEl.innerText = "Points: " + score;
+      }
+    }
+
+    function showGameOver(score) {
+      document.getElementById("finalScore").innerText = "Score: " + score;
+      document.getElementById("popup").style.display = "block";
+
+      const shareText = `I scored ${score} in the SIGN Snake Game! 🐍🍊 Can you beat me?`;
+      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=https://your-vercel-game-url.vercel.app`;
+      document.getElementById("shareBtn").href = twitterUrl;
     }
 
     function restartGame() {
