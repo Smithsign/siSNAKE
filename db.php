@@ -1,11 +1,7 @@
 <?php
-$host = "localhost";
-$user = "root"; // change this for live host
-$password = ""; // change this for live host
-$dbname = "snake_game";
-
-$conn = new mysqli($host, $user, $password, $dbname);
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-?>
+$host = 'your_render_db_host';
+$db   = 'snake_game';
+$user = 'your_user';
+$pass = 'your_password';
+$pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8mb4", $user, $pass);
+$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
