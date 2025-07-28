@@ -1,19 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Snake Game</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <title>SNAKE.SIGN</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@400;700&display=swap">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div class="game-header">
+    <button id="guideBtn" class="ui-button">GUIDE</button>
+    <button id="leaderboardBtn" class="ui-button">LEADERBOARD</button>
+  </div>
+  
   <div id="gameContainer">
     <canvas id="gameCanvas"></canvas>
-    <div id="gameOverPopup" class="hidden">
-      <h2>Game Over!</h2>
-      <p>Your score: <span id="finalScore">0</span></p>
-      <button onclick="tryAgain()">Try Again</button>
-      <button onclick="shareOnX()">Share on X</button>
+    
+    <div id="startScreen" class="overlay">
+      <button id="startBtn" class="ui-button neon">START GAME</button>
+    </div>
+    
+    <div id="countdown" class="overlay hidden">
+      <span class="countdown-number">3</span>
+    </div>
+    
+    <div id="gameOverPopup" class="overlay hidden">
+      <div class="popup-content">
+        <h2>GAME OVER</h2>
+        <div class="player-info">
+          <img id="playerAvatar" src="" alt="Player Avatar" class="avatar">
+          <p id="playerName" class="username"></p>
+        </div>
+        <p class="score-display">SCORE: <span id="finalScore">0</span></p>
+        <div class="button-group">
+          <button onclick="tryAgain()" class="ui-button">TRY AGAIN</button>
+          <button onclick="shareOnX()" class="ui-button">SHARE ON X</button>
+        </div>
+      </div>
     </div>
   </div>
 
