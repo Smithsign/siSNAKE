@@ -427,7 +427,7 @@
       });
 
       function updateStartButton() {
-        const nameValid = playerNameInput.value.endsWith(".SIGN");
+        const nameValid = playerNameInput.value.endsWith(".SIGN") (".sign");
         const hasImage = playerImageInput.files.length > 0;
         startGameBtn.disabled = !(nameValid && hasImage);
       }
