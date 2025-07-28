@@ -14,25 +14,26 @@ let snake = [];
 let direction = null;
 let nextDirection = null;
 let food = {};
-let orangesEaten = 0; // Changed from score to orangesEaten
+let score = 0;
 let gameRunning = false;
 let animationId;
 let lastRenderTime = 0;
 
-// Speed Configuration - Made slower
-const baseSpeed = 600; // Increased from 500 (slower start)
+// Speed Configuration
+const baseSpeed = 500; // Starting speed (higher = slower)
 let currentSpeed = baseSpeed;
+let orangesEaten = 0; // Track total oranges eaten
 
-// Speed increase tiers
+// Speed increase tiers (min oranges, max oranges, speed increase %)
 const speedTiers = [
   { min: 1, max: 5, increase: 0.01 },    // 1-5 oranges: 1% increase
-  { min: 6, max: 10, increase: 0.05 },   // 6-10: 5% increase
-  { min: 11, max: 20, increase: 0.15 },  // 11-20: 15% increase
-  { min: 21, max: 30, increase: 0.35 },  // 21-30: 35% increase
-  { min: 31, max: 40, increase: 0.55 },  // 31-40: 55% increase
-  { min: 41, max: 50, increase: 0.75 },  // 41-50: 75% increase
-  { min: 51, max: 60, increase: 0.85 },  // 51-60: 85% increase
-  { min: 61, max: 90, increase: 1.00 },  // 61-90: 100% increase
+  { min: 6, max: 10, increase: 0.05 },    // 6-10: 5% increase
+  { min: 11, max: 20, increase: 0.15 },   // 11-20: 15% increase
+  { min: 21, max: 30, increase: 0.35 },   // 21-30: 35% increase
+  { min: 31, max: 40, increase: 0.55 },   // 31-40: 55% increase
+  { min: 41, max: 50, increase: 0.75 },   // 41-50: 75% increase
+  { min: 51, max: 60, increase: 0.85 },   // 51-60: 85% increase
+  { min: 61, max: 90, increase: 1.00 },   // 61-90: 100% increase
   { min: 91, max: 1000, increase: 10.00 } // 91+: 1000% increase
 ];
 
@@ -45,10 +46,7 @@ const orangeImage = new Image();
 orangeImage.src = "orange.png";
 orangeImage.onerror = () => console.error("Error loading food image");
 
-const snakeBodyImage = new Image(); // New image for snake body
-snakeBodyImage.src = "orange.png"; // Using orange.png for body
-
-// Larger Mobile controls elements
+// Mobile controls elements
 const mobileControls = `
   <div id="mobileControls" class="mobile-controls">
     <div class="d-pad">
@@ -74,29 +72,22 @@ function initGame() {
   direction = null;
   nextDirection = null;
   food = randomPosition();
+  score = 0;
   orangesEaten = 0;
   currentSpeed = baseSpeed;
   
+  // Clear any existing game loop
   if (animationId) {
     cancelAnimationFrame(animationId);
   }
   
-  // Add larger mobile controls if on mobile
+  // Add mobile controls if on mobile
   if (/Mobi|Android/i.test(navigator.userAgent)) {
     const existingControls = document.getElementById("mobileControls");
     if (!existingControls) {
       document.getElementById("gameContainer").insertAdjacentHTML("beforeend", mobileControls);
       
-      // Style the larger controls
-      const controls = document.getElementById("mobileControls");
-      controls.style.bottom = "30px";
-      controls.style.padding = "0 30px";
-      
       document.querySelectorAll(".control-btn").forEach(btn => {
-        btn.style.width = "80px"; // Increased from 60px
-        btn.style.height = "80px"; // Increased from 60px
-        btn.style.fontSize = "2rem"; // Larger arrows
-        
         btn.addEventListener("touchstart", (e) => {
           e.preventDefault();
           nextDirection = e.target.dataset.direction;
@@ -114,6 +105,7 @@ function initGame() {
     }
   }
 }
+
 // Event Listeners
 startBtn.addEventListener("click", startGame);
 document.addEventListener("keydown", changeDirection);
@@ -252,10 +244,11 @@ function draw() {
   // Draw grid pattern
   drawGrid();
   
- snake.forEach((segment, index) => {
+  // Draw snake
+  snake.forEach((segment, index) => {
     ctx.save();
     if (index === 0) {
-      // Head with xin.jpg
+      // Head with rotation based on direction
       ctx.translate(segment.x + box/2, segment.y + box/2);
       switch(direction) {
         case "UP": ctx.rotate(-Math.PI/2); break;
@@ -265,8 +258,11 @@ function draw() {
       }
       ctx.drawImage(xinImage, -box/2, -box/2, box, box);
     } else {
-      // Body with orange.png - changed from green to orange
-      ctx.drawImage(snakeBodyImage, segment.x, segment.y, box, box);
+      // Body segments
+     ctx.fillStyle = index % 2 === 0 ? "#FF9800" : "#FFA726";
+      ctx.beginPath();
+      ctx.roundRect(segment.x, segment.y, box, box, 5);
+      ctx.fill();
     }
     ctx.restore();
   });
