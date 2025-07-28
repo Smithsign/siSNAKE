@@ -27,21 +27,24 @@ function initGame() {
   if (/Mobi|Android/i.test(navigator.userAgent)) {
     document.getElementById("gameContainer").insertAdjacentHTML("beforeend", mobileControls);
     
-    // Add mobile control event listeners
-    document.querySelectorAll(".control-btn").forEach(btn => {
-      btn.addEventListener("touchstart", (e) => {
-        e.preventDefault();
-        nextDirection = e.target.dataset.direction;
-      });
-      
-      btn.addEventListener("touchend", (e) => {
-        e.preventDefault();
-        if (nextDirection === e.target.dataset.direction) {
-          nextDirection = direction; // Revert to current direction
-        }
-      });
-    });
-  }
+   // Update the mobile control event listeners for better responsiveness:
+document.querySelectorAll(".control-btn").forEach(btn => {
+  btn.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    nextDirection = e.target.dataset.direction;
+    // Visual feedback
+    e.target.style.backgroundColor = "rgba(255, 165, 0, 0.8)";
+  });
+  
+  btn.addEventListener("touchend", (e) => {
+    e.preventDefault();
+    if (nextDirection === e.target.dataset.direction) {
+      nextDirection = direction;
+    }
+    // Reset visual feedback
+    e.target.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+  });
+});
   
   // Add button functionality
   guideBtn.addEventListener("click", showGuide);
@@ -94,7 +97,13 @@ let score = 0;
 let gameRunning = false;
 let animationId;
 let lastRenderTime = 0;
+// Change from:
 let gameSpeed = 150; // Initial speed (will increase with score)
+
+// To:
+let gameSpeed = 300; // Start slower (higher number = slower snake)
+let speedIncrease = 10; // How much to speed up after each orange
+let minSpeed = 100; // Maximum speed limit
 
 // Load assets
 const xinImage = new Image();
@@ -140,9 +149,11 @@ function changeDirection(e) {
   else if (key === "ArrowRight" && direction !== "LEFT") nextDirection = "RIGHT";
 }
 
-// Game Start Sequence
 function startGame() {
   initGame();
+  // Reset to slow speed when starting new game
+  gameSpeed = 300;
+  
   document.getElementById("startScreen").classList.add("hidden");
   countdownElement.classList.remove("hidden");
   
@@ -211,17 +222,24 @@ function update() {
   
   snake.unshift(head);
   
-  // Check food collision
-  if (head.x === food.x && head.y === food.y) {
-    score++;
-    // Increase speed every 5 points
-    if (score % 5 === 0 && gameSpeed > 50) {
-      gameSpeed -= 10;
-    }
-    food = randomPosition();
-  } else {
-    snake.pop();
+  /// Change from:
+if (head.x === food.x && head.y === food.y) {
+  score++;
+  // Increase speed every 5 points
+  if (score % 5 === 0 && gameSpeed > 50) {
+    gameSpeed -= 10;
   }
+  food = randomPosition();
+}
+
+// To:
+if (head.x === food.x && head.y === food.y) {
+  score++;
+  // Gradually increase speed with each orange eaten
+  if (gameSpeed > minSpeed) {
+    gameSpeed = Math.max(minSpeed, gameSpeed - speedIncrease);
+  }
+  food = randomPosition();
 }
 
 function draw() {
@@ -339,3 +357,20 @@ function shareOnX() {
 
 // Initialize on load
 window.addEventListener("load", initGame);
+
+function drawSpeedIndicator() {
+  const speedPercentage = Math.round(((300 - gameSpeed) / (300 - minSpeed)) * 100);
+  ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+  ctx.fillRect(20, 50, 100, 10);
+  ctx.fillStyle = `hsl(${speedPercentage * 1.2}, 100%, 50%)`;
+  ctx.fillRect(20, 50, speedPercentage, 10);
+  
+  ctx.fillStyle = "#FF9800";
+  ctx.font = "12px 'Orbitron', sans-serif";
+  ctx.fillText(`SPEED: ${speedPercentage}%`, 20, 45);
+}
+function draw() {
+  // ... existing draw code ...
+  
+  drawSpeedIndicator(); // Add this line
+}
