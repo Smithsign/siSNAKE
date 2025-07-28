@@ -1,6 +1,35 @@
-// Add to the top of game.js
+// Game Initialization
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+const startBtn = document.getElementById("startBtn");
+const countdownElement = document.getElementById("countdown");
+const countdownNumber = document.querySelector(".countdown-number");
 const guideBtn = document.getElementById("guideBtn");
 const leaderboardBtn = document.getElementById("leaderboardBtn");
+
+// Game Settings
+const box = 30; // Size of each grid box
+const FPS = 60; // Frames per second
+let snake = []; // Snake array
+let direction = null; // Current direction
+let nextDirection = null; // Next direction buffer
+let food = {}; // Food position
+let score = 0; // Player score
+let gameRunning = false; // Game state
+let animationId; // Animation frame ID
+let lastRenderTime = 0; // Last render timestamp
+let gameSpeed = 300; // Initial speed (higher = slower)
+let speedIncrease = 10; // Speed increase per food
+let minSpeed = 100; // Maximum speed limit
+
+// Load assets
+const xinImage = new Image();
+xinImage.src = "xin.jpg";
+xinImage.onerror = () => console.error("Error loading snake head image");
+
+const orangeImage = new Image();
+orangeImage.src = "orange.png";
+orangeImage.onerror = () => console.error("Error loading food image");
 
 // Mobile controls elements
 const mobileControls = `
@@ -19,39 +48,57 @@ const mobileControls = `
   </div>
 `;
 
-// Add to initGame() function
+// Game Setup
 function initGame() {
-  // ... existing code ...
+  // Set canvas size
+  canvas.width = Math.min(window.innerWidth - 40, 800);
+  canvas.height = Math.min(window.innerHeight - 200, 600);
+  
+  // Initialize snake
+  snake = [{ x: 5 * box, y: 5 * box }];
+  direction = null;
+  nextDirection = null;
+  food = randomPosition();
+  score = 0;
+  gameSpeed = 300; // Reset to slow speed
+  
+  // Clear any existing game loop
+  if (animationId) {
+    cancelAnimationFrame(animationId);
+  }
   
   // Add mobile controls if on mobile
   if (/Mobi|Android/i.test(navigator.userAgent)) {
-    document.getElementById("gameContainer").insertAdjacentHTML("beforeend", mobileControls);
-    
-   // Update the mobile control event listeners for better responsiveness:
-document.querySelectorAll(".control-btn").forEach(btn => {
-  btn.addEventListener("touchstart", (e) => {
-    e.preventDefault();
-    nextDirection = e.target.dataset.direction;
-    // Visual feedback
-    e.target.style.backgroundColor = "rgba(255, 165, 0, 0.8)";
-  });
-  
-  btn.addEventListener("touchend", (e) => {
-    e.preventDefault();
-    if (nextDirection === e.target.dataset.direction) {
-      nextDirection = direction;
+    const existingControls = document.getElementById("mobileControls");
+    if (!existingControls) {
+      document.getElementById("gameContainer").insertAdjacentHTML("beforeend", mobileControls);
+      
+      // Add mobile control event listeners
+      document.querySelectorAll(".control-btn").forEach(btn => {
+        btn.addEventListener("touchstart", (e) => {
+          e.preventDefault();
+          nextDirection = e.target.dataset.direction;
+          e.target.style.backgroundColor = "rgba(255, 165, 0, 0.8)";
+        });
+        
+        btn.addEventListener("touchend", (e) => {
+          e.preventDefault();
+          if (nextDirection === e.target.dataset.direction) {
+            nextDirection = direction;
+          }
+          e.target.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+        });
+      });
     }
-    // Reset visual feedback
-    e.target.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
-  });
-});
-  
-  // Add button functionality
-  guideBtn.addEventListener("click", showGuide);
-  leaderboardBtn.addEventListener("click", showLeaderboard);
+  }
 }
 
-// Add these new functions
+// Event Listeners
+startBtn.addEventListener("click", startGame);
+document.addEventListener("keydown", changeDirection);
+guideBtn.addEventListener("click", showGuide);
+leaderboardBtn.addEventListener("click", showLeaderboard);
+
 function showGuide() {
   alert(`HOW TO PLAY:
 - Use ARROW KEYS or WASD to control the snake
@@ -66,94 +113,22 @@ function showLeaderboard() {
   window.location.href = "leaderboard.html";
 }
 
-// Update changeDirection function to include WASD
+// Direction Handling
 function changeDirection(e) {
   if (!gameRunning) return;
   
   const key = e.key.toUpperCase();
   
-  // Arrow keys or WASD
-  if (key === "ARROWUP" || key === "W") nextDirection = "UP";
-  else if (key === "ARROWDOWN" || key === "S") nextDirection = "DOWN";
-  else if (key === "ARROWLEFT" || key === "A") nextDirection = "LEFT";
-  else if (key === "ARROWRIGHT" || key === "D") nextDirection = "RIGHT";
-}
-
-// Game Initialization
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
-const startBtn = document.getElementById("startBtn");
-const countdownElement = document.getElementById("countdown");
-const countdownNumber = document.querySelector(".countdown-number");
-
-// Game Settings
-const box = 30; // Increased size for better visibility
-const FPS = 60; // Smoother animation
-let snake = [];
-let direction = null;
-let nextDirection = null; // For smoother direction changes
-let food = {};
-let score = 0;
-let gameRunning = false;
-let animationId;
-let lastRenderTime = 0;
-// Change from:
-let gameSpeed = 150; // Initial speed (will increase with score)
-
-// To:
-let gameSpeed = 300; // Start slower (higher number = slower snake)
-let speedIncrease = 10; // How much to speed up after each orange
-let minSpeed = 100; // Maximum speed limit
-
-// Load assets
-const xinImage = new Image();
-xinImage.src = "xin.jpg";
-xinImage.onerror = () => console.error("Error loading snake head image");
-
-const orangeImage = new Image();
-orangeImage.src = "orange.png";
-orangeImage.onerror = () => console.error("Error loading food image");
-
-// Game Setup
-function initGame() {
-  canvas.width = Math.min(window.innerWidth - 40, 800);
-  canvas.height = Math.min(window.innerHeight - 200, 600);
-  
-  snake = [{ x: 5 * box, y: 5 * box }];
-  direction = null;
-  nextDirection = null;
-  food = randomPosition();
-  score = 0;
-  gameSpeed = 150;
-  
-  // Clear any existing game loop
-  if (animationId) {
-    cancelAnimationFrame(animationId);
-  }
-}
-
-// Event Listeners
-startBtn.addEventListener("click", startGame);
-document.addEventListener("keydown", changeDirection);
-
-// Direction Handling (with buffer for smoother turns)
-function changeDirection(e) {
-  if (!gameRunning) return;
-  
-  const key = e.key;
-  
   // Prevent 180-degree turns
-  if (key === "ArrowUp" && direction !== "DOWN") nextDirection = "UP";
-  else if (key === "ArrowDown" && direction !== "UP") nextDirection = "DOWN";
-  else if (key === "ArrowLeft" && direction !== "RIGHT") nextDirection = "LEFT";
-  else if (key === "ArrowRight" && direction !== "LEFT") nextDirection = "RIGHT";
+  if ((key === "ARROWUP" || key === "W") && direction !== "DOWN") nextDirection = "UP";
+  else if ((key === "ARROWDOWN" || key === "S") && direction !== "UP") nextDirection = "DOWN";
+  else if ((key === "ARROWLEFT" || key === "A") && direction !== "RIGHT") nextDirection = "LEFT";
+  else if ((key === "ARROWRIGHT" || key === "D") && direction !== "LEFT") nextDirection = "RIGHT";
 }
 
+// Game Start Sequence
 function startGame() {
   initGame();
-  // Reset to slow speed when starting new game
-  gameSpeed = 300;
-  
   document.getElementById("startScreen").classList.add("hidden");
   countdownElement.classList.remove("hidden");
   
@@ -174,7 +149,7 @@ function startGame() {
   }, 1000);
 }
 
-// Main Game Loop (using requestAnimationFrame for smoother animation)
+// Main Game Loop
 function gameLoop(timestamp) {
   if (!gameRunning) return;
   
@@ -222,24 +197,17 @@ function update() {
   
   snake.unshift(head);
   
-  /// Change from:
-if (head.x === food.x && head.y === food.y) {
-  score++;
-  // Increase speed every 5 points
-  if (score % 5 === 0 && gameSpeed > 50) {
-    gameSpeed -= 10;
+  // Check food collision
+  if (head.x === food.x && head.y === food.y) {
+    score++;
+    // Gradually increase speed with each orange eaten
+    if (gameSpeed > minSpeed) {
+      gameSpeed = Math.max(minSpeed, gameSpeed - speedIncrease);
+    }
+    food = randomPosition();
+  } else {
+    snake.pop();
   }
-  food = randomPosition();
-}
-
-// To:
-if (head.x === food.x && head.y === food.y) {
-  score++;
-  // Gradually increase speed with each orange eaten
-  if (gameSpeed > minSpeed) {
-    gameSpeed = Math.max(minSpeed, gameSpeed - speedIncrease);
-  }
-  food = randomPosition();
 }
 
 function draw() {
@@ -279,11 +247,13 @@ function draw() {
   ctx.drawImage(orangeImage, food.x, food.y, box, box);
   ctx.restore();
   
-  // Draw score
+  // Draw score and speed
   ctx.fillStyle = "#FF9800";
   ctx.font = "20px 'Orbitron', sans-serif";
   ctx.textAlign = "left";
   ctx.fillText(`SCORE: ${score}`, 20, 30);
+  
+  drawSpeedIndicator();
 }
 
 function drawGrid() {
@@ -305,6 +275,18 @@ function drawGrid() {
     ctx.lineTo(canvas.width, y);
     ctx.stroke();
   }
+}
+
+function drawSpeedIndicator() {
+  const speedPercentage = Math.round(((300 - gameSpeed) / (300 - minSpeed)) * 100);
+  ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+  ctx.fillRect(20, 50, 100, 10);
+  ctx.fillStyle = `hsl(${speedPercentage * 1.2}, 100%, 50%)`;
+  ctx.fillRect(20, 50, speedPercentage, 10);
+  
+  ctx.fillStyle = "#FF9800";
+  ctx.font = "12px 'Orbitron', sans-serif";
+  ctx.fillText(`SPEED: ${speedPercentage}%`, 20, 45);
 }
 
 function randomPosition() {
@@ -357,20 +339,3 @@ function shareOnX() {
 
 // Initialize on load
 window.addEventListener("load", initGame);
-
-function drawSpeedIndicator() {
-  const speedPercentage = Math.round(((300 - gameSpeed) / (300 - minSpeed)) * 100);
-  ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-  ctx.fillRect(20, 50, 100, 10);
-  ctx.fillStyle = `hsl(${speedPercentage * 1.2}, 100%, 50%)`;
-  ctx.fillRect(20, 50, speedPercentage, 10);
-  
-  ctx.fillStyle = "#FF9800";
-  ctx.font = "12px 'Orbitron', sans-serif";
-  ctx.fillText(`SPEED: ${speedPercentage}%`, 20, 45);
-}
-function draw() {
-  // ... existing draw code ...
-  
-  drawSpeedIndicator(); // Add this line
-}
