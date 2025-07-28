@@ -18,8 +18,8 @@ let score = 0; // Player score
 let gameRunning = false; // Game state
 let animationId; // Animation frame ID
 let lastRenderTime = 0; // Last render timestamp
-let gameSpeed = 300; // Initial speed (higher = slower)
-let speedIncrease = 10; // Speed increase per food
+let gameSpeed = 800; // Initial speed (higher = slower)
+let speedIncrease = 1; // Speed increase per food
 let minSpeed = 100; // Maximum speed limit
 
 // Load assets
