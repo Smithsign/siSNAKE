@@ -167,5 +167,245 @@ body {
   
   .countdown-number {
     font-size: 5rem;
+
+/* Landing Page Styles */
+.landing-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+  color: white;
+}
+
+.game-logo {
+  text-align: center;
+  margin-bottom: 40px;
+  animation: float 3s ease-in-out infinite;
+}
+
+.game-logo h1 {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 3rem;
+  margin: 0;
+  color: var(--primary);
+  text-shadow: 0 0 10px rgba(255, 165, 0, 0.5);
+}
+
+.sign {
+  color: var(--accent);
+}
+
+.snake-icon {
+  font-size: 4rem;
+  margin-top: 10px;
+  animation: wiggle 2s infinite;
+}
+
+.signup-form {
+  background: rgba(30, 30, 30, 0.9);
+  padding: 30px;
+  border-radius: 15px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 0 30px rgba(255, 165, 0, 0.3);
+  border: 2px solid var(--primary);
+}
+
+.input-group {
+  margin-bottom: 20px;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-family: 'Orbitron', sans-serif;
+  color: var(--secondary);
+}
+
+.input-group input[type="text"] {
+  width: 100%;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid var(--primary);
+  border-radius: 8px;
+  color: white;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1rem;
+}
+
+.hint {
+  display: block;
+  margin-top: 5px;
+  font-size: 0.8rem;
+  color: #aaa;
+}
+
+.upload-area {
+  position: relative;
+  height: 150px;
+  border: 2px dashed var(--primary);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.3s;
+}
+
+.upload-area:hover {
+  border-color: var(--secondary);
+  background: rgba(255, 165, 0, 0.05);
+}
+
+#uploadText {
+  z-index: 2;
+  text-align: center;
+  padding: 0 20px;
+}
+
+#playerImage {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.preview {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  z-index: 1;
+}
+
+.controls-info {
+  margin-top: 30px;
+  text-align: center;
+  width: 100%;
+  max-width: 500px;
+}
+
+.controls-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.control-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.key {
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 165, 0, 0.2);
+  border: 2px solid var(--primary);
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 5px 0;
+  font-family: 'Press Start 2P', cursive;
+}
+
+.mobile-hint {
+  font-size: 0.9rem;
+  color: #aaa;
+  margin-top: 10px;
+}
+
+/* Mobile Controls */
+.mobile-controls {
+  position: fixed;
+  bottom: 20px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 20px;
+  z-index: 20;
+}
+
+.d-pad {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.middle-row {
+  display: flex;
+}
+
+.control-btn {
+  width: 60px;
+  height: 60px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid var(--primary);
+  border-radius: 50%;
+  color: white;
+  font-size: 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 5px;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+.action-buttons {
+  display: flex;
+  align-items: flex-end;
+}
+
+.action-btn {
+  width: 60px;
+  height: 60px;
+  background: rgba(255, 0, 0, 0.5);
+  border: 2px solid red;
+  border-radius: 50%;
+  color: white;
+  font-family: 'Press Start 2P', cursive;
+}
+
+/* Animations */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(5deg); }
+  75% { transform: rotate(-5deg); }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .game-logo h1 {
+    font-size: 2rem;
+  }
+  
+  .signup-form {
+    padding: 20px;
+  }
+  
+  .control-btn {
+    width: 50px;
+    height: 50px;
+    font-size: 1.2rem;
+  }
+}
+
   }
 }
