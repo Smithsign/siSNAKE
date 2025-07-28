@@ -1,103 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Snake.SIGN</title>
-  <link rel="stylesheet" href="style.css" />
-  <style>
-    .hidden { display: none; }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SNAKE.SIGN</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@400;700&display=swap">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="landingPage">
-    <h1>Snake.SIGN</h1>
-    <div class="input-box">
-      <input type="text" id="playerName" placeholder="Enter your name (must end with .SIGN)" />
-      <input type="file" id="playerImage" accept="image/*" />
-      <button id="startBtn" disabled>START THE GAME</button>
+  <div class="landing-container">
+    <div class="game-logo">
+      <h1>SNAKE<span class="sign">.SIGN</span></h1>
+      <div class="snake-icon">🐍</div>
+    </div>
+    
+    <div class="signup-form">
+      <div class="input-group">
+        <label for="playerName">YOUR NAME (must end with .SIGN)</label>
+        <input type="text" id="playerName" placeholder="e.g. ALEX.SIGN" pattern=".*\.SIGN" required>
+        <small class="hint">Your name must end with .SIGN</small>
+      </div>
+      
+      <div class="input-group">
+        <label for="playerImage">PROFILE PICTURE</label>
+        <div class="upload-area" id="uploadArea">
+          <span id="uploadText">DRAG & DROP OR CLICK TO UPLOAD</span>
+          <input type="file" id="playerImage" accept="image/*">
+          <div class="preview" id="imagePreview"></div>
+        </div>
+      </div>
+      
+      <button id="startGameBtn" class="ui-button neon" disabled>ENTER GAME</button>
+    </div>
+    
+    <div class="controls-info">
+      <h3>CONTROLS</h3>
+      <div class="controls-grid">
+        <div class="control-item">
+          <div class="key">↑</div>
+          <div class="key">W</div>
+          <span>UP</span>
+        </div>
+        <div class="control-item">
+          <div class="key">←</div>
+          <div class="key">A</div>
+          <span>LEFT</span>
+        </div>
+        <div class="control-item">
+          <div class="key">↓</div>
+          <div class="key">S</div>
+          <span>DOWN</span>
+        </div>
+        <div class="control-item">
+          <div class="key">→</div>
+          <div class="key">D</div>
+          <span>RIGHT</span>
+        </div>
+      </div>
+      <p class="mobile-hint">On mobile: Use on-screen controller</p>
     </div>
   </div>
 
-  <div id="gamePage" class="hidden">
-    <div class="top-bar">
-      <button id="guideBtn">Guide</button>
-      <button id="gameBtn">Game</button>
-      <button id="leaderboardBtn">Leaderboard</button>
-    </div>
-    <canvas id="gameCanvas"></canvas>
-  </div>
-
-  <div id="gameOverPopup" class="hidden">
-    <h2>Game Over</h2>
-    <p>Your Score: <span id="finalScore"></span></p>
-    <button id="retryBtn">Try Again</button>
-    <a id="shareX" target="_blank">Share on X</a>
-  </div>
-
-  <div id="leaderboard" class="hidden">
-    <h3>Leaderboard - Top 100</h3>
-    <ul id="leaderboardList"></ul>
-    <button onclick="document.getElementById('leaderboard').classList.add('hidden')">Close</button>
-  </div>
-<div id="countdown" style="display:none; position:absolute; top:40%; left:50%; transform:translate(-50%, -50%); font-size:5rem; color:white; z-index:10;"></div>
-
-<div id="canvasWrapper" style="display: none;">
-  <canvas id="gameCanvas" width="600" height="600"></canvas>
-  <div class="controls">
-    <button onclick="location.href='leaderboard.html'" class="ui-button">Leaderboard</button>
-    <button onclick="alert('Guide: Use arrow keys to control the snake.\nEat the orange, avoid crashing!');" class="ui-button">Guide</button>
-  </div>
-</div>
-
-<div id="gameOverScreen" style="display:none; flex-direction:column; align-items:center; justify-content:center; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); color:white; z-index:10;">
-  <h2>Game Over</h2>
-  <p id="finalScore"></p>
-  <button onclick="location.reload()" class="ui-button">Try Again</button>
-  <a id="shareScore" class="ui-button" href="#" target="_blank">Share on X</a>
-</div>
-
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const playerName = document.getElementById("playerName");
-      const playerImage = document.getElementById("playerImage");
-      const startBtn = document.getElementById("startBtn");
-
-      function validateInputs() {
-        const nameValid = playerName.value.trim().toUpperCase().endsWith(".SIGN");
-        const imageValid = playerImage.files.length > 0;
-
-        startBtn.disabled = !(nameValid && imageValid);
-      }
-
-      playerName.addEventListener("input", validateInputs);
-      playerImage.addEventListener("change", validateInputs);
-
-      startBtn.addEventListener("click", () => {
-        const name = playerName.value.trim();
-
-        if (!name.toUpperCase().endsWith(".SIGN")) {
-          alert("Name must end with .SIGN");
-          return;
-        }
-
-        if (playerImage.files.length === 0) {
-          alert("Please upload a picture.");
-          return;
-        }
-
-        // Store name in localStorage
-        localStorage.setItem("playerName", name);
-
-        // Read image as base64 and store
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          localStorage.setItem("playerImage", e.target.result);
-          window.location.href = "game.html"; // Redirect to game
-        };
-        reader.readAsDataURL(playerImage.files[0]);
-      });
-    });
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
