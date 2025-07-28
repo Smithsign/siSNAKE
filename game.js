@@ -372,7 +372,7 @@ function tryAgain() {
 
 function shareOnX() {
   const name = localStorage.getItem("playerName") || "Player";
-  const tweet = `I ate ${orangesEaten} oranges in SNAKE.SIGN! 🍊🐍 Can you beat me? #SnakeSIGN`;
+  const tweet = `I ate ${orangesEaten} oranges in siSNAKE! 🍊🐍 Can you beat me? Gib a shot:si-snake.vercel.app`  ;
   window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweet)}`);
 }
 
