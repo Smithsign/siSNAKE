@@ -14,26 +14,26 @@ let snake = [];
 let direction = null;
 let nextDirection = null;
 let food = {};
-let score = 0;
+let orangesEaten = 0; // Using oranges instead of score
 let gameRunning = false;
 let animationId;
 let lastRenderTime = 0;
 
-// Speed Configuration
-const baseSpeed = 500; // Starting speed (higher = slower)
+// Enhanced Speed Configuration (slower)
+const baseSpeed = 600; // Higher = slower
 let currentSpeed = baseSpeed;
-let orangesEaten = 0; // Track total oranges eaten
+const minSpeed = 50; // Minimum speed limit
 
-// Speed increase tiers (min oranges, max oranges, speed increase %)
+// Speed increase tiers
 const speedTiers = [
   { min: 1, max: 5, increase: 0.01 },    // 1-5 oranges: 1% increase
-  { min: 6, max: 10, increase: 0.05 },    // 6-10: 5% increase
-  { min: 11, max: 20, increase: 0.15 },   // 11-20: 15% increase
-  { min: 21, max: 30, increase: 0.35 },   // 21-30: 35% increase
-  { min: 31, max: 40, increase: 0.55 },   // 31-40: 55% increase
-  { min: 41, max: 50, increase: 0.75 },   // 41-50: 75% increase
-  { min: 51, max: 60, increase: 0.85 },   // 51-60: 85% increase
-  { min: 61, max: 90, increase: 1.00 },   // 61-90: 100% increase
+  { min: 6, max: 10, increase: 0.05 },   // 6-10: 5% increase
+  { min: 11, max: 20, increase: 0.15 },  // 11-20: 15% increase
+  { min: 21, max: 30, increase: 0.35 },  // 21-30: 35% increase
+  { min: 31, max: 40, increase: 0.55 },  // 31-40: 55% increase
+  { min: 41, max: 50, increase: 0.75 },  // 41-50: 75% increase
+  { min: 51, max: 60, increase: 0.85 },  // 51-60: 85% increase
+  { min: 61, max: 90, increase: 1.00 },  // 61-90: 100% increase
   { min: 91, max: 1000, increase: 10.00 } // 91+: 1000% increase
 ];
 
@@ -46,7 +46,7 @@ const orangeImage = new Image();
 orangeImage.src = "orange.png";
 orangeImage.onerror = () => console.error("Error loading food image");
 
-// Mobile controls elements
+// Larger Mobile controls elements
 const mobileControls = `
   <div id="mobileControls" class="mobile-controls">
     <div class="d-pad">
@@ -72,22 +72,26 @@ function initGame() {
   direction = null;
   nextDirection = null;
   food = randomPosition();
-  score = 0;
   orangesEaten = 0;
   currentSpeed = baseSpeed;
   
-  // Clear any existing game loop
   if (animationId) {
     cancelAnimationFrame(animationId);
   }
   
-  // Add mobile controls if on mobile
+  // Add larger mobile controls if on mobile
   if (/Mobi|Android/i.test(navigator.userAgent)) {
     const existingControls = document.getElementById("mobileControls");
     if (!existingControls) {
       document.getElementById("gameContainer").insertAdjacentHTML("beforeend", mobileControls);
       
+      // Style larger controls
       document.querySelectorAll(".control-btn").forEach(btn => {
+        btn.style.width = "80px";
+        btn.style.height = "80px";
+        btn.style.fontSize = "2rem";
+        btn.style.margin = "10px";
+        
         btn.addEventListener("touchstart", (e) => {
           e.preventDefault();
           nextDirection = e.target.dataset.direction;
@@ -102,6 +106,12 @@ function initGame() {
           e.target.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
         });
       });
+      
+      // Adjust middle row spacing
+      const middleRow = document.querySelector(".middle-row");
+      if (middleRow) {
+        middleRow.style.gap = "20px";
+      }
     }
   }
 }
@@ -115,8 +125,8 @@ leaderboardBtn.addEventListener("click", showLeaderboard);
 function showGuide() {
   alert(`HOW TO PLAY:
 - Use ARROW KEYS or WASD to control the snake
-- Eat the oranges to grow longer
-- Don't hit the walls or yourself
+- Eat oranges to grow longer
+- Don't hit walls or yourself
 - Speed increases based on oranges eaten:
   1-5: +1% per orange
   6-10: +5% per orange
@@ -128,7 +138,7 @@ function showGuide() {
   61-90: +100% per orange
   91+: +1000% per orange
   
-Mobile users can use the on-screen controller.`);
+Mobile: Use on-screen controller`);
 }
 
 function showLeaderboard() {
@@ -221,14 +231,13 @@ function update() {
   
   // Check food collision
   if (head.x === food.x && head.y === food.y) {
-    score++;
     orangesEaten++;
     
     // Calculate speed increase based on tiers
     const tier = speedTiers.find(t => orangesEaten >= t.min && orangesEaten <= t.max);
     if (tier) {
-      const speedMultiplier = 1 - tier.increase; // Convert % increase to multiplier
-      currentSpeed = Math.max(50, currentSpeed * speedMultiplier); // Never go below 50ms
+      const speedMultiplier = 1 - tier.increase;
+      currentSpeed = Math.max(minSpeed, currentSpeed * speedMultiplier);
     }
     
     food = randomPosition();
@@ -244,11 +253,11 @@ function draw() {
   // Draw grid pattern
   drawGrid();
   
-  // Draw snake
+  // Draw snake with orange body
   snake.forEach((segment, index) => {
     ctx.save();
     if (index === 0) {
-      // Head with rotation based on direction
+      // Head with xin.jpg
       ctx.translate(segment.x + box/2, segment.y + box/2);
       switch(direction) {
         case "UP": ctx.rotate(-Math.PI/2); break;
@@ -258,27 +267,24 @@ function draw() {
       }
       ctx.drawImage(xinImage, -box/2, -box/2, box, box);
     } else {
-      // Body segments
-     ctx.fillStyle = index % 2 === 0 ? "#FF9800" : "#FFA726";
-      ctx.beginPath();
-      ctx.roundRect(segment.x, segment.y, box, box, 5);
-      ctx.fill();
+      // Body with orange.png
+      ctx.drawImage(orangeImage, segment.x, segment.y, box, box);
     }
     ctx.restore();
   });
   
-  // Draw food with shadow and glow effect
+  // Draw food with glow effect
   ctx.save();
   ctx.shadowColor = "rgba(255, 165, 0, 0.7)";
   ctx.shadowBlur = 15;
   ctx.drawImage(orangeImage, food.x, food.y, box, box);
   ctx.restore();
   
-  // Draw score and speed info
+  // Draw oranges eaten and speed info
   ctx.fillStyle = "#FF9800";
   ctx.font = "20px 'Orbitron', sans-serif";
   ctx.textAlign = "left";
-  ctx.fillText(`SCORE: ${score}`, 20, 30);
+  ctx.fillText(`ORANGES: ${orangesEaten}`, 20, 30);
   
   drawSpeedInfo();
 }
@@ -318,7 +324,6 @@ function drawSpeedInfo() {
   // Draw text info
   ctx.fillStyle = "#FF9800";
   ctx.font = "14px 'Orbitron', sans-serif";
-  ctx.fillText(`ORANGES: ${orangesEaten}`, 20, 45);
   ctx.fillText(`TIER: ${tier.increase*100}% increase`, 20, 80);
   ctx.fillText(`SPEED: ${Math.round((baseSpeed/currentSpeed)*100)}%`, 20, 95);
 }
@@ -349,15 +354,15 @@ function gameOver() {
   
   document.getElementById("playerName").textContent = name;
   document.getElementById("playerAvatar").src = image;
-  document.getElementById("finalScore").textContent = score;
+  document.getElementById("finalScore").textContent = orangesEaten;
   document.getElementById("gameOverPopup").classList.remove("hidden");
   
-  // Save score
+  // Save data
   fetch("submit_score.php", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username: name, score, image, oranges: orangesEaten })
-  }).catch(err => console.error("Error saving score:", err));
+    body: JSON.stringify({ username: name, oranges: orangesEaten, image })
+  }).catch(err => console.error("Error saving data:", err));
 }
 
 function tryAgain() {
@@ -367,7 +372,7 @@ function tryAgain() {
 
 function shareOnX() {
   const name = localStorage.getItem("playerName") || "Player";
-  const tweet = `I scored ${score} (${orangesEaten} oranges) in SNAKE.SIGN! 🐍 Can you beat me? #SnakeSIGN`;
+  const tweet = `I ate ${orangesEaten} oranges in SNAKE.SIGN! 🍊🐍 Can you beat me? #SnakeSIGN`;
   window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweet)}`);
 }
 
