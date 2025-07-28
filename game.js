@@ -1,3 +1,81 @@
+// Add to the top of game.js
+const guideBtn = document.getElementById("guideBtn");
+const leaderboardBtn = document.getElementById("leaderboardBtn");
+
+// Mobile controls elements
+const mobileControls = `
+  <div id="mobileControls" class="mobile-controls">
+    <div class="d-pad">
+      <button class="control-btn up" data-direction="UP">↑</button>
+      <div class="middle-row">
+        <button class="control-btn left" data-direction="LEFT">←</button>
+        <button class="control-btn right" data-direction="RIGHT">→</button>
+      </div>
+      <button class="control-btn down" data-direction="DOWN">↓</button>
+    </div>
+    <div class="action-buttons">
+      <button class="action-btn" id="mobilePause">II</button>
+    </div>
+  </div>
+`;
+
+// Add to initGame() function
+function initGame() {
+  // ... existing code ...
+  
+  // Add mobile controls if on mobile
+  if (/Mobi|Android/i.test(navigator.userAgent)) {
+    document.getElementById("gameContainer").insertAdjacentHTML("beforeend", mobileControls);
+    
+    // Add mobile control event listeners
+    document.querySelectorAll(".control-btn").forEach(btn => {
+      btn.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        nextDirection = e.target.dataset.direction;
+      });
+      
+      btn.addEventListener("touchend", (e) => {
+        e.preventDefault();
+        if (nextDirection === e.target.dataset.direction) {
+          nextDirection = direction; // Revert to current direction
+        }
+      });
+    });
+  }
+  
+  // Add button functionality
+  guideBtn.addEventListener("click", showGuide);
+  leaderboardBtn.addEventListener("click", showLeaderboard);
+}
+
+// Add these new functions
+function showGuide() {
+  alert(`HOW TO PLAY:
+- Use ARROW KEYS or WASD to control the snake
+- Eat the oranges to grow longer
+- Don't hit the walls or yourself
+- The more you eat, the faster you go!
+  
+Mobile users can use the on-screen controller.`);
+}
+
+function showLeaderboard() {
+  window.location.href = "leaderboard.html";
+}
+
+// Update changeDirection function to include WASD
+function changeDirection(e) {
+  if (!gameRunning) return;
+  
+  const key = e.key.toUpperCase();
+  
+  // Arrow keys or WASD
+  if (key === "ARROWUP" || key === "W") nextDirection = "UP";
+  else if (key === "ARROWDOWN" || key === "S") nextDirection = "DOWN";
+  else if (key === "ARROWLEFT" || key === "A") nextDirection = "LEFT";
+  else if (key === "ARROWRIGHT" || key === "D") nextDirection = "RIGHT";
+}
+
 // Game Initialization
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
