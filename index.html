@@ -5,19 +5,326 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SNAKE.SIGN</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@400;700&display=swap">
-  <link rel="stylesheet" href="style.css">
+  <style>
+    :root {
+      --primary: #FF7F50;
+      --secondary: #FFA500;
+      --accent: #4CAF50;
+      --dark: #222;
+      --light: #FFF0E1;
+      --wood: #8B4513;
+      --paper: #F5F5DC;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Orbitron', 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+      color: white;
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .classic-container {
+      width: 90%;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 30px;
+      background: var(--wood);
+      border: 15px solid transparent;
+      border-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="none" stroke="%23FFA500" stroke-width="10"/></svg>') 15;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
+      position: relative;
+    }
+
+    .classic-container::before {
+      content: '';
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      bottom: 10px;
+      border: 2px dashed rgba(255, 255, 255, 0.3);
+      pointer-events: none;
+    }
+
+    .game-logo {
+      text-align: center;
+      margin-bottom: 30px;
+      position: relative;
+    }
+
+    .game-logo h1 {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 2.5rem;
+      margin: 0;
+      color: var(--primary);
+      text-shadow: 3px 3px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+      letter-spacing: 2px;
+    }
+
+    .sign {
+      color: var(--accent);
+    }
+
+    .snake-icon {
+      font-size: 3rem;
+      margin-top: 10px;
+      animation: wiggle 2s infinite;
+    }
+
+    .classic-form {
+      background: var(--paper);
+      padding: 25px;
+      border: 5px solid var(--wood);
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
+      position: relative;
+    }
+
+    .classic-form::after {
+      content: '';
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      right: 5px;
+      bottom: 5px;
+      border: 1px solid rgba(139, 69, 19, 0.3);
+      pointer-events: none;
+    }
+
+    .input-group {
+      margin-bottom: 25px;
+      position: relative;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-family: 'Press Start 2P', cursive;
+      color: var(--wood);
+      font-size: 0.8rem;
+      text-shadow: 1px 1px 0 white;
+    }
+
+    .classic-input {
+      width: 100%;
+      padding: 12px 15px;
+      background: white;
+      border: 3px solid var(--wood);
+      border-radius: 0;
+      color: #333;
+      font-family: 'Courier New', monospace;
+      font-size: 1rem;
+      box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.2);
+      transition: all 0.3s;
+    }
+
+    .classic-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 3px 3px 0 var(--primary);
+    }
+
+    .hint {
+      display: block;
+      margin-top: 5px;
+      font-size: 0.7rem;
+      color: #777;
+      font-style: italic;
+    }
+
+    .upload-area {
+      position: relative;
+      height: 150px;
+      border: 3px dashed var(--wood);
+      background: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      overflow: hidden;
+      transition: all 0.3s;
+      box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.2);
+    }
+
+    .upload-area:hover {
+      border-color: var(--primary);
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    #uploadText {
+      z-index: 2;
+      text-align: center;
+      padding: 0 20px;
+      color: #555;
+      font-family: 'Courier New', monospace;
+    }
+
+    #playerImage {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .preview {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background-size: cover;
+      background-position: center;
+      z-index: 1;
+    }
+
+    .classic-button {
+      padding: 12px 30px;
+      background: var(--primary);
+      border: none;
+      border-radius: 0;
+      color: white;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.3);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: block;
+      width: 100%;
+      margin-top: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .classic-button:hover {
+      background: var(--secondary);
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.3);
+    }
+
+    .classic-button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.3);
+    }
+
+    .classic-button::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transform: translateX(-100%);
+      transition: transform 0.5s;
+    }
+
+    .classic-button:hover::after {
+      transform: translateX(100%);
+    }
+
+    .controls-info {
+      margin-top: 30px;
+      text-align: center;
+      width: 100%;
+      background: var(--paper);
+      padding: 15px;
+      border: 3px solid var(--wood);
+      box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.2);
+    }
+
+    .controls-info h3 {
+      font-family: 'Press Start 2P', cursive;
+      color: var(--wood);
+      margin: 0 0 15px 0;
+      font-size: 1rem;
+    }
+
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 0 auto;
+      max-width: 300px;
+    }
+
+    .control-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .key {
+      width: 40px;
+      height: 40px;
+      background: white;
+      border: 3px solid var(--wood);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 5px 0;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.8rem;
+      box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
+    }
+
+    .mobile-hint {
+      font-size: 0.8rem;
+      color: #555;
+      margin-top: 15px;
+      font-style: italic;
+    }
+
+    /* Animations */
+    @keyframes wiggle {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(5deg); }
+      75% { transform: rotate(-5deg); }
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+      .game-logo h1 {
+        font-size: 1.8rem;
+      }
+      
+      .classic-container {
+        padding: 20px;
+        width: 95%;
+      }
+      
+      .classic-form {
+        padding: 15px;
+      }
+      
+      .key {
+        width: 35px;
+        height: 35px;
+        font-size: 0.7rem;
+      }
+    }
+  </style>
 </head>
 <body>
-  <div class="landing-container">
+  <div class="classic-container">
     <div class="game-logo">
       <h1>SNAKE<span class="sign">.SIGN</span></h1>
       <div class="snake-icon">🐍</div>
     </div>
     
-    <div class="signup-form">
+    <div class="classic-form">
       <div class="input-group">
         <label for="playerName">YOUR NAME (must end with .SIGN)</label>
-        <input type="text" id="playerName" placeholder="e.g. ALEX.SIGN" pattern=".*\.SIGN" required>
+        <input type="text" id="playerName" class="classic-input" placeholder="e.g. ALEX.SIGN" pattern=".*\.SIGN" required>
         <small class="hint">Your name must end with .SIGN</small>
       </div>
       
@@ -25,12 +332,12 @@
         <label for="playerImage">PROFILE PICTURE</label>
         <div class="upload-area" id="uploadArea">
           <span id="uploadText">DRAG & DROP OR CLICK TO UPLOAD</span>
-          <input type="file" id="playerImage" accept="image/*">
+          <input type="file" id="playerImage" class="classic-input" accept="image/*">
           <div class="preview" id="imagePreview"></div>
         </div>
       </div>
       
-      <button id="startGameBtn" class="ui-button neon" disabled>ENTER GAME</button>
+      <button id="startGameBtn" class="classic-button" disabled>ENTER GAME</button>
     </div>
     
     <div class="controls-info">
@@ -61,6 +368,69 @@
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const playerNameInput = document.getElementById("playerName");
+      const playerImageInput = document.getElementById("playerImage");
+      const uploadArea = document.getElementById("uploadArea");
+      const imagePreview = document.getElementById("imagePreview");
+      const startGameBtn = document.getElementById("startGameBtn");
+      const uploadText = document.getElementById("uploadText");
+
+      // Validate name input
+      playerNameInput.addEventListener("input", function() {
+        const isValid = this.value.endsWith(".SIGN");
+        this.classList.toggle("invalid", !isValid && this.value.length > 0);
+        updateStartButton();
+      });
+
+      // Handle image upload
+      playerImageInput.addEventListener("change", function(e) {
+        if (e.target.files.length > 0) {
+          const file = e.target.files[0];
+          const reader = new FileReader();
+          
+          reader.onload = function(event) {
+            imagePreview.style.backgroundImage = `url(${event.target.result})`;
+            uploadText.style.display = "none";
+            localStorage.setItem("playerImage", event.target.result);
+            updateStartButton();
+          }
+          
+          reader.readAsDataURL(file);
+        }
+      });
+
+      // Drag and drop functionality
+      uploadArea.addEventListener("dragover", function(e) {
+        e.preventDefault();
+        this.classList.add("dragover");
+      });
+
+      uploadArea.addEventListener("dragleave", function() {
+        this.classList.remove("dragover");
+      });
+
+      uploadArea.addEventListener("drop", function(e) {
+        e.preventDefault();
+        this.classList.remove("dragover");
+        playerImageInput.files = e.dataTransfer.files;
+        const event = new Event("change");
+        playerImageInput.dispatchEvent(event);
+      });
+
+      // Start game button
+      startGameBtn.addEventListener("click", function() {
+        localStorage.setItem("playerName", playerNameInput.value);
+        window.location.href = "game.html";
+      });
+
+      function updateStartButton() {
+        const nameValid = playerNameInput.value.endsWith(".SIGN");
+        const hasImage = playerImageInput.files.length > 0;
+        startGameBtn.disabled = !(nameValid && hasImage);
+      }
+    });
+  </script>
 </body>
 </html>
