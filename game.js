@@ -8,19 +8,34 @@ const guideBtn = document.getElementById("guideBtn");
 const leaderboardBtn = document.getElementById("leaderboardBtn");
 
 // Game Settings
-const box = 30; // Size of each grid box
-const FPS = 60; // Frames per second
-let snake = []; // Snake array
-let direction = null; // Current direction
-let nextDirection = null; // Next direction buffer
-let food = {}; // Food position
-let score = 0; // Player score
-let gameRunning = false; // Game state
-let animationId; // Animation frame ID
-let lastRenderTime = 0; // Last render timestamp
-let gameSpeed = 800; // Initial speed (higher = slower)
-let speedIncrease = 1; // Speed increase per food
-let minSpeed = 100; // Maximum speed limit
+const box = 30;
+const FPS = 60;
+let snake = [];
+let direction = null;
+let nextDirection = null;
+let food = {};
+let score = 0;
+let gameRunning = false;
+let animationId;
+let lastRenderTime = 0;
+
+// Speed Configuration
+const baseSpeed = 500; // Starting speed (higher = slower)
+let currentSpeed = baseSpeed;
+let orangesEaten = 0; // Track total oranges eaten
+
+// Speed increase tiers (min oranges, max oranges, speed increase %)
+const speedTiers = [
+  { min: 1, max: 5, increase: 0.01 },    // 1-5 oranges: 1% increase
+  { min: 6, max: 10, increase: 0.05 },    // 6-10: 5% increase
+  { min: 11, max: 20, increase: 0.15 },   // 11-20: 15% increase
+  { min: 21, max: 30, increase: 0.35 },   // 21-30: 35% increase
+  { min: 31, max: 40, increase: 0.55 },   // 31-40: 55% increase
+  { min: 41, max: 50, increase: 0.75 },   // 41-50: 75% increase
+  { min: 51, max: 60, increase: 0.85 },   // 51-60: 85% increase
+  { min: 61, max: 90, increase: 1.00 },   // 61-90: 100% increase
+  { min: 91, max: 1000, increase: 10.00 } // 91+: 1000% increase
+];
 
 // Load assets
 const xinImage = new Image();
@@ -50,17 +65,16 @@ const mobileControls = `
 
 // Game Setup
 function initGame() {
-  // Set canvas size
   canvas.width = Math.min(window.innerWidth - 40, 800);
   canvas.height = Math.min(window.innerHeight - 200, 600);
   
-  // Initialize snake
   snake = [{ x: 5 * box, y: 5 * box }];
   direction = null;
   nextDirection = null;
   food = randomPosition();
   score = 0;
-  gameSpeed = 300; // Reset to slow speed
+  orangesEaten = 0;
+  currentSpeed = baseSpeed;
   
   // Clear any existing game loop
   if (animationId) {
@@ -73,7 +87,6 @@ function initGame() {
     if (!existingControls) {
       document.getElementById("gameContainer").insertAdjacentHTML("beforeend", mobileControls);
       
-      // Add mobile control event listeners
       document.querySelectorAll(".control-btn").forEach(btn => {
         btn.addEventListener("touchstart", (e) => {
           e.preventDefault();
@@ -104,7 +117,16 @@ function showGuide() {
 - Use ARROW KEYS or WASD to control the snake
 - Eat the oranges to grow longer
 - Don't hit the walls or yourself
-- The more you eat, the faster you go!
+- Speed increases based on oranges eaten:
+  1-5: +1% per orange
+  6-10: +5% per orange
+  11-20: +15% per orange
+  21-30: +35% per orange
+  31-40: +55% per orange
+  41-50: +75% per orange
+  51-60: +85% per orange
+  61-90: +100% per orange
+  91+: +1000% per orange
   
 Mobile users can use the on-screen controller.`);
 }
@@ -154,7 +176,7 @@ function gameLoop(timestamp) {
   if (!gameRunning) return;
   
   const secondsSinceLastRender = (timestamp - lastRenderTime) / 1000;
-  if (secondsSinceLastRender < 1 / (FPS / (gameSpeed / 150))) {
+  if (secondsSinceLastRender < 1 / (FPS / (currentSpeed / 150))) {
     animationId = requestAnimationFrame(gameLoop);
     return;
   }
@@ -200,10 +222,15 @@ function update() {
   // Check food collision
   if (head.x === food.x && head.y === food.y) {
     score++;
-    // Gradually increase speed with each orange eaten
-    if (gameSpeed > minSpeed) {
-      gameSpeed = Math.max(minSpeed, gameSpeed - speedIncrease);
+    orangesEaten++;
+    
+    // Calculate speed increase based on tiers
+    const tier = speedTiers.find(t => orangesEaten >= t.min && orangesEaten <= t.max);
+    if (tier) {
+      const speedMultiplier = 1 - tier.increase; // Convert % increase to multiplier
+      currentSpeed = Math.max(50, currentSpeed * speedMultiplier); // Never go below 50ms
     }
+    
     food = randomPosition();
   } else {
     snake.pop();
@@ -247,13 +274,13 @@ function draw() {
   ctx.drawImage(orangeImage, food.x, food.y, box, box);
   ctx.restore();
   
-  // Draw score and speed
+  // Draw score and speed info
   ctx.fillStyle = "#FF9800";
   ctx.font = "20px 'Orbitron', sans-serif";
   ctx.textAlign = "left";
   ctx.fillText(`SCORE: ${score}`, 20, 30);
   
-  drawSpeedIndicator();
+  drawSpeedInfo();
 }
 
 function drawGrid() {
@@ -277,16 +304,23 @@ function drawGrid() {
   }
 }
 
-function drawSpeedIndicator() {
-  const speedPercentage = Math.round(((300 - gameSpeed) / (300 - minSpeed)) * 100);
-  ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-  ctx.fillRect(20, 50, 100, 10);
-  ctx.fillStyle = `hsl(${speedPercentage * 1.2}, 100%, 50%)`;
-  ctx.fillRect(20, 50, speedPercentage, 10);
+function drawSpeedInfo() {
+  // Calculate current tier
+  const tier = speedTiers.find(t => orangesEaten >= t.min && orangesEaten <= t.max) || speedTiers[speedTiers.length-1];
+  const speedPercentage = Math.round(((baseSpeed - currentSpeed) / baseSpeed) * 100);
   
+  // Draw speed bar
+  ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
+  ctx.fillRect(20, 50, 200, 15);
+  ctx.fillStyle = `hsl(${Math.min(120, 120 - (speedPercentage/2))}, 100%, 50%)`;
+  ctx.fillRect(20, 50, Math.min(200, speedPercentage * 2), 15);
+  
+  // Draw text info
   ctx.fillStyle = "#FF9800";
-  ctx.font = "12px 'Orbitron', sans-serif";
-  ctx.fillText(`SPEED: ${speedPercentage}%`, 20, 45);
+  ctx.font = "14px 'Orbitron', sans-serif";
+  ctx.fillText(`ORANGES: ${orangesEaten}`, 20, 45);
+  ctx.fillText(`TIER: ${tier.increase*100}% increase`, 20, 80);
+  ctx.fillText(`SPEED: ${Math.round((baseSpeed/currentSpeed)*100)}%`, 20, 95);
 }
 
 function randomPosition() {
@@ -322,7 +356,7 @@ function gameOver() {
   fetch("submit_score.php", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username: name, score, image })
+    body: JSON.stringify({ username: name, score, image, oranges: orangesEaten })
   }).catch(err => console.error("Error saving score:", err));
 }
 
@@ -333,7 +367,7 @@ function tryAgain() {
 
 function shareOnX() {
   const name = localStorage.getItem("playerName") || "Player";
-  const tweet = `I scored ${score} in SNAKE.SIGN! 🐍 Can you beat me? #SnakeSIGN`;
+  const tweet = `I scored ${score} (${orangesEaten} oranges) in SNAKE.SIGN! 🐍 Can you beat me? #SnakeSIGN`;
   window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweet)}`);
 }
 
